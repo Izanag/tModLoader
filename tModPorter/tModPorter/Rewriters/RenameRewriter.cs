@@ -178,16 +178,21 @@ public class RenameRewriter : BaseRewriter {
 		return nameSyntax;
 	}
 
-	public static AdditionalRenameAction OnType(string newType) => (rw, token) => {
+	private static AdditionalRenameAction OnExpression(Func<RenameRewriter, ExpressionSyntax> expressionFactory) => (rw, token) => {
 		if (token.Parent.Parent is MemberAccessExpressionSyntax { Expression: SimpleNameSyntax } memberAccess) {
 			rw.RegisterAction<MemberAccessExpressionSyntax>(memberAccess, n =>
-				n.WithExpression(rw.UseType(newType).WithTriviaFrom(n.Expression)));
+				n.WithExpression(expressionFactory(rw).WithTriviaFrom(n.Expression)));
 		}
 		else if (token.Parent is SimpleNameSyntax name && rw.model.GetOperation(token.Parent) is IInvalidOperation) { // standalone expr
 			rw.RegisterAction<SimpleNameSyntax>(name,
-				n => MemberAccessExpression(rw.UseType(newType), n.WithoutTrivia()).WithTriviaFrom(n));
+				n => MemberAccessExpression(expressionFactory(rw), n.WithoutTrivia()).WithTriviaFrom(n));
 		}
 	};
+
+	public static AdditionalRenameAction OnType(string newType) => OnExpression(rw => rw.UseType(newType));
+
+	public static AdditionalRenameAction OnMemberAccess(string newType, string memberName) =>
+		OnExpression(rw => MemberAccessExpression(rw.UseType(newType), memberName));
 
 	public static AdditionalRenameAction AccessMember(string memberName) => (rw, node) => {
 		if (node.Parent is not IdentifierNameSyntax nameSyntax || nameSyntax.Parent is not ExpressionSyntax usage)

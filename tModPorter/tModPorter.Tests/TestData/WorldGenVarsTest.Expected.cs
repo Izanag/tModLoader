@@ -1,4 +1,5 @@
 using Terraria; 
+using Terraria.GameContent.Generation.Dungeon;
 using Terraria.WorldBuilding;
 
 public class WorldGenVarsTest
@@ -84,16 +85,20 @@ public class WorldGenVarsTest
 		Use(GenVars.tRooms);
 		Use(GenVars.lAltarX);
 		Use(GenVars.lAltarY);
+		Use(GenVars.CurrentDungeonGenVars.dungeonSide);
+		Use(GenVars.CurrentDungeonGenVars.dungeonLocation);
 #if COMPILE_ERROR
-		Use(GenVars.dungeonSide);
-		Use(GenVars.dungeonLocation);
 		Use(GenVars.dungeonLake);
-		Use(GenVars.crackedType);
-		Use(GenVars.dungeonX);
-		Use(GenVars.dungeonY);
-		Use(GenVars.lastDungeonHall);
+#endif
+		Use(GenVars.CurrentDungeonGenVars.brickCrackedTileType);
+		Use(GenVars.mainDungeonX);
+		Use(GenVars.mainDungeonY);
+		Use(DungeonCrawler.CurrentDungeonData.lastDungeonHall);
+#if COMPILE_ERROR
 		Use(GenVars.maxDRooms);
-		Use(GenVars.numDRooms);
+#endif
+		Use(DungeonCrawler.CurrentDungeonData.dungeonRooms.Count);
+#if COMPILE_ERROR
 		Use(GenVars.dRoomX);
 		Use(GenVars.dRoomY);
 		Use(GenVars.dRoomSize);
@@ -102,24 +107,30 @@ public class WorldGenVarsTest
 		Use(GenVars.dRoomR);
 		Use(GenVars.dRoomT);
 		Use(GenVars.dRoomB);
-		Use(GenVars.numDDoors);
+#endif
+		Use(DungeonCrawler.CurrentDungeonData.dungeonDoorData.Count);
+#if COMPILE_ERROR
 		Use(GenVars.DDoorX);
 		Use(GenVars.DDoorY);
 		Use(GenVars.DDoorPos);
-		Use(GenVars.numDungeonPlatforms);
+#endif
+		Use(DungeonCrawler.CurrentDungeonData.dungeonPlatformData.Count);
+#if COMPILE_ERROR
 		Use(GenVars.dungeonPlatformX);
 		Use(GenVars.dungeonPlatformY);
-		Use(GenVars.dEnteranceX);
-		Use(GenVars.dSurface);
-		Use(GenVars.dxStrength1);
-		Use(GenVars.dyStrength1);
-		Use(GenVars.dxStrength2);
-		Use(GenVars.dyStrength2);
-		Use(GenVars.dMinX);
-		Use(GenVars.dMaxX);
-		Use(GenVars.dMinY);
-		Use(GenVars.dMaxY);
 #endif
+		Use(GenVars.CurrentDungeonGenVars.generatingDungeonTopX);
+#if COMPILE_ERROR
+		Use(GenVars.dSurface);
+#endif
+		Use(DungeonCrawler.CurrentDungeonData.dungeonEntranceStrengthX);
+		Use(DungeonCrawler.CurrentDungeonData.dungeonEntranceStrengthY);
+		Use(DungeonCrawler.CurrentDungeonData.dungeonEntranceStrengthX2);
+		Use(DungeonCrawler.CurrentDungeonData.dungeonEntranceStrengthY2);
+		Use(DungeonCrawler.CurrentDungeonData.dungeonBounds.Left);
+		Use(DungeonCrawler.CurrentDungeonData.dungeonBounds.Right);
+		Use(DungeonCrawler.CurrentDungeonData.dungeonBounds.Top);
+		Use(DungeonCrawler.CurrentDungeonData.dungeonBounds.Bottom);
 		Use(GenVars.skyLakes);
 		Use(GenVars.generatedShadowKey);
 		Use(GenVars.numIslandHouses);

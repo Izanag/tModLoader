@@ -119,6 +119,12 @@ public class MemberUseRewriter : BaseRewriter {
 		return memberName;
 	};
 
+	public static RewriteMemberUse ReplaceWithExpression(System.Func<MemberUseRewriter, ExpressionSyntax> replacementFactory) => (rw, op, memberName) => {
+		var rootExpr = GetContainingExpression(memberName);
+		rw.RegisterAction<ExpressionSyntax>(rootExpr, n => replacementFactory(rw).WithTriviaFrom(n));
+		return memberName;
+	};
+
 	private static ExpressionSyntax GetContainingExpression(ExpressionSyntax expr)
 	{
 		while (true) {
