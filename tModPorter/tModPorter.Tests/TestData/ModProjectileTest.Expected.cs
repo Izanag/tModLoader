@@ -15,13 +15,13 @@ public class ModProjectileTest : ModProjectile
 		Console.Write(DrawOffsetX);
 		Console.Write(DrawOriginOffsetY);
 		Console.Write(DrawOriginOffsetX);
-		Console.Write(DrawHeldProjInFrontOfHeldItemAndArms/* tModPorter Note: Removed. Replace with Projectile.drawLayer = ProjectileDrawLayerID.HeldProjOverHand; */);
+		Console.Write(default(bool)/* tModPorter Note: Removed. Replace with Projectile.drawLayer = ProjectileDrawLayerID.HeldProjOverHand. */);
 	}
 
 	public override void SetStaticDefaults()
 	{
-		ProjectileID.Sets.HeldProjDoesNotUsePlayerGfxOffY/* tModPorter Note: Removed. AI() should use master.RotatedRelativePoint(master.MountedCenter + ...) to position held projectiles */[Type] = true;
-		ProjectileID.Sets.DontAttachHideToAlpha/* tModPorter Note: Removed. Now true by default. See Projectile.usesOwnerLight and Projectile.drawLayer for more details. */[Type] = true;
+		;/* tModPorter Note: Removed. AI() should use master.RotatedRelativePoint(master.MountedCenter + ...) to position held projectiles. */
+		;/* tModPorter Note: Removed. Now true by default. See Projectile.usesOwnerLight and Projectile.drawLayer for more details. */
 	}
 
 	public override bool? CanDamage()/* tModPorter Suggestion: Return null instead of true */ { return false; }

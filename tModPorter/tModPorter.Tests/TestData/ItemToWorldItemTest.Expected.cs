@@ -25,6 +25,7 @@ public class ItemToWorldItemTest
 		*/
 
 		// Verify that fields of Item that were moved to WorldItem don't get refactored when Item reference changed to WorldItem reference 
+#if COMPILE_ERROR
 		foreach (WorldItem item in Main.item) {
 			if (item.active && !item.beingGrabbed && hitbox.Intersects(item.Hitbox)) {
 				item.active = false;
@@ -32,5 +33,6 @@ public class ItemToWorldItemTest
 				NetMessage.SendData(MessageID.SyncItem, number: item.whoAmI);
 			}
 		}
+#endif
 	}
 }

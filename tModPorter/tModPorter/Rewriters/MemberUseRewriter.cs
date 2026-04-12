@@ -119,6 +119,38 @@ public class MemberUseRewriter : BaseRewriter {
 		return memberName;
 	};
 
+	private static ExpressionSyntax GetContainingExpression(ExpressionSyntax expr)
+	{
+		while (true) {
+			switch (expr.Parent) {
+				case MemberAccessExpressionSyntax memberAccess when memberAccess.Expression == expr:
+					expr = memberAccess;
+					continue;
+				case ElementAccessExpressionSyntax elementAccess when elementAccess.Expression == expr:
+					expr = elementAccess;
+					continue;
+				case ConditionalAccessExpressionSyntax conditionalAccess when conditionalAccess.Expression == expr:
+					expr = conditionalAccess;
+					continue;
+				case ParenthesizedExpressionSyntax parenthesized when parenthesized.Expression == expr:
+					expr = parenthesized;
+					continue;
+				default:
+					return expr;
+			}
+		}
+	}
+
+	private static ExpressionSyntax RemovedExpression(MemberUseRewriter rw, IOperation op, ExpressionSyntax expr, string comment)
+	{
+		var type = op.Type ?? rw.model.GetTypeInfo(expr).Type;
+		ExpressionSyntax replacement = type != null
+			? DefaultExpression(rw.UseType(type))
+			: LiteralExpression(SyntaxKind.NullLiteralExpression);
+
+		return replacement.WithTriviaFrom(expr).WithBlockComment(comment);
+	}
+
 	public static RewriteMemberUse RemoveContainingStatementOrInitializer(string comment) => (rw, op, memberName) => {
 		string fullComment = ("Note: Removed. " + comment).TrimEnd();
 		var assignment = memberName.FirstAncestorOrSelf<AssignmentExpressionSyntax>();
@@ -131,16 +163,32 @@ public class MemberUseRewriter : BaseRewriter {
 			return memberName.WithBlockComment(fullComment);
 		}
 
-		var statement = memberName.FirstAncestorOrSelf<StatementSyntax>();
-		if (statement != null) {
-			rw.RegisterAction<StatementSyntax>(statement, n =>
+		var expressionStatement = memberName.FirstAncestorOrSelf<ExpressionStatementSyntax>();
+		if (expressionStatement != null) {
+			rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n =>
 				EmptyStatement().WithTriviaFrom(n).WithBlockComment(fullComment)
 			);
 
 			return memberName;
 		}
 
-		return memberName.WithBlockComment(fullComment);
+		var rootExpression = GetContainingExpression(memberName);
+		rw.RegisterAction<ExpressionSyntax>(rootExpression, n => RemovedExpression(rw, op, n, fullComment));
+		return memberName;
+	};
+
+	public static RewriteMemberUse WorldItemActive() => (rw, op, memberName) => {
+		if (memberName.Parent is not MemberAccessExpressionSyntax access)
+			return memberName;
+
+		if (op.Parent is not IAssignmentOperation { Target: var target } assignment || target != op)
+			return memberName;
+
+		rw.RegisterAction<MemberAccessExpressionSyntax>(access, n =>
+			MemberAccessExpression(MemberAccessExpression(n.Expression.WithoutTrivia(), "inner"), "active").WithTriviaFrom(n)
+		);
+
+		return memberName;
 	};
 
 	public static SyntaxNode RewriteIsJourneyMode(MemberUseRewriter rw, IOperation op, IdentifierNameSyntax memberName)
