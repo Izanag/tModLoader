@@ -19,7 +19,6 @@ namespace ExampleMod.Content.Projectiles
 
 		public override void SetStaticDefaults() {
 			Main.projFrames[Type] = 6;
-			ProjectileID.Sets.HeldProjDoesNotUsePlayerGfxOffY/* tModPorter Note: Removed. AI() should use master.RotatedRelativePoint(master.MountedCenter + ...) to position held projectiles */[Type] = true;
 		}
 
 		public override void SetDefaults() {

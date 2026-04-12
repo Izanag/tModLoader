@@ -1,12 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <BuildMod>false</BuildMod>
-    <OutputTmlReferences>true</OutputTmlReferences>
-  </PropertyGroup>
-
-  <Import Project="../../src/WorkspaceInfo.targets" />
-  <Import Project="$(tModLoaderSteamPath)/tMLMod.targets" />
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
@@ -18,9 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\FNA\FNA.Core.csproj" />
+    <ProjectReference Include="..\..\src\tModLoader\ReLogic\ReLogic.csproj" />
+    <ProjectReference Include="..\..\src\tModLoader\Terraria\Terraria.csproj" />
     <ProjectReference Include="..\tModCodeAssist\tModCodeAssist.csproj" />
     <ProjectReference Include="..\tModCodeAssist.CodeFixes\tModCodeAssist.CodeFixes.csproj" />
-    <Analyzer Remove="$(tMLLibraryPath)\tModCodeAssist\**\*.dll" />
 
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.2.2" />

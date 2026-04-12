@@ -7,9 +7,9 @@ env:
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  # This workflow runs when a push to 1.4.4 branch happens so that it copies over to preview
+  # This workflow runs when a push to 1.4.5 branch happens so that it copies over to preview
   #push:
-    #branches: [1.4.4]
+    #branches: [1.4.5]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -29,10 +29,10 @@ jobs:
             
         # There is a bug with this that requires the previous step to checkout a different branch then either of two specified
         - name: Merge
-          # If the condition is TRUE then we merge 1.4.4 into preview. If False, nothing happens 
+          # If the condition is TRUE then we merge 1.4.5 into preview. If False, nothing happens 
           uses: tModLoader/gh-action-nightly-merge@master
           with:
-              stable_branch: '1.4.4'
+              stable_branch: '1.4.5'
               development_branch: ${{env.AlphaBranch}}
               allow_ff: true
               ff_only: true

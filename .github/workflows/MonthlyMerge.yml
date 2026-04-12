@@ -2,7 +2,7 @@ name: Monthly Update tModLoader
 
 # Branch Names
 env:
-    DevBranch: 1.4.4
+    DevBranch: 1.4.5
     StableBranch: stable
     PreviewBranch: preview
 

@@ -12,7 +12,6 @@ namespace ExampleMod.Content.Projectiles
 	internal class ExampleFlailProjectile : ModProjectile
 	{
 		public override void SetStaticDefaults() {
-			ProjectileID.Sets.HeldProjDoesNotUsePlayerGfxOffY/* tModPorter Note: Removed. AI() should use master.RotatedRelativePoint(master.MountedCenter + ...) to position held projectiles */[Type] = true;
 		}
 
 		public override void SetDefaults() {
@@ -85,7 +84,7 @@ namespace ExampleMod.Content.Projectiles
 
 		public override void OnHitPlayer(Player target, Player.HurtInfo info) {
 			if (Main.rand.NextBool(4)) {
-				target.AddBuff(BuffID.OnFire, 180, quiet: false);
+				target.AddBuff(BuffID.OnFire, 180, true);
 			}
 		}
 

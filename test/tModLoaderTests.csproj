@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Terraria.ModLoader</RootNamespace>
@@ -15,8 +15,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\tModLoader\Terraria\Terraria.csproj" />
-		<Reference Include="Ionic.Zip.Reduced">
-			<HintPath>..\src\tModLoader\Terraria\Libraries\Common\Ionic.Zip.Reduced.dll</HintPath>
-		</Reference>
   </ItemGroup>
 </Project>

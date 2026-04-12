@@ -38,6 +38,20 @@ The `Item` class has had the in-world functionality split into a new `WorldItem`
 
 Hooks that deal with items in the game world will now have a `WorldItem item` parameter as well. This will require modders to switch from `Item` to `item` in various `ModItem` classes if dealing with the fields that are now on `WorldItem`.
 
+### Recipe Groups and Crafting Stations
+
+Recipe group APIs were reorganized in 1.4.5.
+
+`RecipeGroupID` no longer exists. Use `RecipeGroups` for built-in vanilla groups such as `RecipeGroups.IronBar`, `RecipeGroups.Wood`, and `RecipeGroups.Sand`.
+
+Custom recipe groups should now be created with `new RecipeGroup(...).Register()`. After registration, use the group's `RegisteredId` when calling `Recipe.AddRecipeGroup(...)`.
+
+Recipes can now only require a single crafting station. Code that relied on multiple `AddTile(...)` calls or direct edits to `Recipe.requiredTile` will need to be redesigned around one required station.
+
+### Buff Application
+
+`Player.AddBuff` now uses `AddBuff(int type, int time, bool fromNetPvP = false)`. The old extra boolean arguments used in older versions are gone, so remove them when porting your code.
+
 ### Projectile Draw Changes
 
 There have been several changes to projectile drawing in this update.

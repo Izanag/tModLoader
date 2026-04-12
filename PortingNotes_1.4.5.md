@@ -2,10 +2,18 @@
 
 Once all patches are fixed, these items need to be fixed or double checked:
 
+Checkpoint progress (2026-04-12):
+
+- Workspace builds without depending on an external Steam `tModLoaderDev` install. Repo-local `tMLMod.targets` fallbacks are in place and `tModCodeAssist.Tests` now references local projects directly.
+- `dotnet build solutions/tModLoader.sln -c Debug` succeeds after the baseline/build wiring fixes.
+- `dotnet test test/tModLoaderTests.csproj` succeeds.
+- `ExampleMod` compiles on 1.4.5 after applying the first migration batch for `WorldItem`, recipe groups, `Player.AddBuff`, `Chest.maxItems`, tooltip overrides, and the removal of `ProjectileID.Sets.HeldProjDoesNotUsePlayerGfxOffY`.
+- Contributor docs, preview metadata, and core CI branch/version references have been updated to the 1.4.5/.NET 10 fork workflow.
+
 - GameModeData.cs no longer exists, patches need to be redistributed
 - NPCSpawnParams.gameModeData no longer exists. This was potentially used in IBestiaryInfoElement.
 - NPCSpawnParams.strengthMultiplierOverride renamed to difficultyOverride. Investigate if behavior changed.
-- RecipeGroupID.cs no longer exists, need to adjust documentation accordingly.
+- RecipeGroupID.cs no longer exists. MigrationGuide/ExampleMod/docs have been updated, but keep an eye out for lingering references.
 - NPCHitCount = 58 --> (and others) needs comment explaining what the value should be. Why is it 1 more when no sound 0?
 - Remove all Obsolete methods, including hooks and vanilla changes.
 - Doublecheck methods marked as "Unused": SwitchTilesNew, AddStructure/AddProtectedStructure
@@ -23,12 +31,12 @@ Once all patches are fixed, these items need to be fixed or double checked:
 - https://github.com/tModLoader/tModLoader/pull/1675 seemed to fix a bug that is apparently now fixed in vanilla. Patches in AWorkshopPublishInfoState deleted. Verify that existing workshop publicity still correctly updates UI without requiring a click.
 - RecipeGroup has changed dramatically. We'll need to adjust how modded groups merge and document the new behaviors and new ctors. The tml added methods might also be superfluous now. 
 - Mount.Dismount now has a ignoreEffect parameter, this might duplicate the skipDust variable used in MountLoader.Dismount. Adjust patches (and docs) accordingly if they should be the same. When is it set? Do modded mounts need to care about when ignoreEffect was true or false?
-- NPC.Spawner class needs docs and hooks (similar to the old NPCSpawnInfo). The intent is that modders can intercept the various stages, and set/override flags to alter vanilla spawn logic.
+- NPC.Spawner class needs a deeper hook audit. Migration docs and the SpawnChance rename are in place, but the various stages still need to be reviewed so modders can reliably override vanilla spawn logic.
 - NPCLoader.BuffTownNPC will need to be reworked to facilitate new functionality. "Defeating a boss now also gives each villager a 1.5% attack speed bonus." is a new vanilla effect. Similarly the Advanced Combat Techniques increases health by 250. Dryad immortal on infectedSeed.
 - Check for any remaining TML added ID sets that aren't in TML.cs files.
 - BuffLoader.ReApply (NPC) logic seems changed, likely to fix desync issues. The server sync for MessageID.NPCBuffs when !quiet now happens after the reapply logic. Modded ReApply will need doc updates or maybe new parameters to properly adjust to these changes. Maybe a ref time parameter instead?
 - NPC.TryAddingRepeatedBuff added. Might be useful to document and make public.
-- Recipe.requiredTile no longer supports multiple tiles. Only a single crafting station is the new approach. In theory it is possible to restore multiple required tiles, but we'd have to rule that recipes can show in the filtered crafting station UI if _any_ of their required tiles meet the filter.
+- Recipe.requiredTile no longer supports multiple tiles. Migration docs and ExampleMod now use the single-station approach; decide later if compatibility should ever restore multi-station requirements.
 - Zone calculations seem to have been reorganized a bit. Verify functionality of hooks (TileCountsAvailable, ResetNearbyTileEffects, UpdateSceneEffect)
 - TryGetTileBounds needs docs. DrawFrameOffsets needs docs and maybe example, not sure what it is for yet.
 - FileUtilities.Copy and Move no longer have an `overwrite` parameter.
@@ -56,7 +64,7 @@ Once all patches are fixed, these items need to be fixed or double checked:
 - Player.meleeArmorPenetration is new, need to hook it up
 - Player.ApplyItemTime has been updated, we might not need as many patches?
 - Integrate new `private void SetItemAnimation(int baseFrames, float multiplier)` method into our usetime hooks. Make public.
-- Player.AddBuff parameters changed. Will need to adjust docs and maybe inform modders of any behavior changes.
+- Player.AddBuff parameters changed. Docs/examples now reflect `AddBuff(int type, int time, bool fromNetPvP = false)`, but behavior should still be audited anywhere older docs mention `quiet` or `foodHack`.
 - What does `Main.item[num].OverrideWith(theItemWeDrop);` do differently than `Main.item[num] = theItemWeDrop;`? Do we need to document or adjust how modders interact with Main.item[]?
 - ProjectileLoader.CanUseGrapple can be reworked. The vanilla code now consolidates "max hooks" checks, so we should be able to make the logic for most modded grappling hooks easier by supplying those parameters to the hook or using a set.
 - https://github.com/tModLoader/tModLoader/issues/4494 should be easily fixable with the new QuickGrapple code organization
@@ -226,7 +234,7 @@ Once all patches are fixed, these items need to be fixed or double checked:
 - Player.IsAllowedToHoldItems
 - MountID.Sets.DoesNotOverrideLegFrames seems like something a lot of modded mounts might want to use. (All other new MountID.Sets sets as well)
 - BuffID.IsAnNPCWhipDebuff, which tModLoader renamed to IsATagBuff, has changed a lot. Need to document the new behavior. Do we want to revert the name change? Also CanBeRemovedByNetMessage docs are now wrong.
-- ProjectileID.Sets.HeldProjDoesNotUsePlayerGfxOffY removed. How has this been fixed? I thought it wouldn't be fixed in vanilla.
+- ProjectileID.Sets.HeldProjDoesNotUsePlayerGfxOffY removed. Migration docs and ExampleMod now point held projectiles to `master.RotatedRelativePoint(master.MountedCenter + ...)`, but we still want better guidance and more samples for tricky visuals.
 - Need to determine if hooks need to act on ModItem or WorldItem. For example: `ItemIO.SendModData(item3, writer);`
   - `public EntityGlobalsEnumerator<TGlobal> Enumerate(IEntityWithGlobals<TGlobal> entity) => new(ForType(entity.Type), entity);` doesn't work as-is for hooks that are now WorldItem. I've changed them to `.Enumerate(item.inner)`, but I'm not positive what design we want for these hooks now. (WorldItem points to Item, but Item doesn't point to WorldItem.)
 - The number3 parameter of the SyncEquipment message seems to have changed meaning. Docs needed.
