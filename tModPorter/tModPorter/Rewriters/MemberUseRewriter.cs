@@ -107,6 +107,42 @@ public class MemberUseRewriter : BaseRewriter {
 		return memberName;
 	};
 
+	public static RewriteMemberUse DifficultyScaleCurveSample(string curveName) => (rw, op, memberName) => {
+		var curveExpr = MemberAccessExpression(rw.UseType("Terraria.DataStructures.GameDifficultyData"), curveName);
+		var difficultyExpr = MemberAccessExpression(rw.UseType("Terraria.Main"), "Difficulty");
+		var rootExpr = (ExpressionSyntax)op.Syntax;
+
+		rw.RegisterAction<ExpressionSyntax>(rootExpr, n =>
+			InvocationExpression(MemberAccessExpression(curveExpr, "Sample"), difficultyExpr).WithTriviaFrom(n)
+		);
+
+		return memberName;
+	};
+
+	public static RewriteMemberUse RemoveContainingStatementOrInitializer(string comment) => (rw, op, memberName) => {
+		string fullComment = ("Note: Removed. " + comment).TrimEnd();
+		var assignment = memberName.FirstAncestorOrSelf<AssignmentExpressionSyntax>();
+
+		if (assignment?.Parent is InitializerExpressionSyntax init) {
+			rw.RegisterAction<InitializerExpressionSyntax>(init, n =>
+				n.WithExpressions(SyntaxFactory.SeparatedList(n.Expressions.Where(expr => expr != assignment))).WithTriviaFrom(n)
+			);
+
+			return memberName.WithBlockComment(fullComment);
+		}
+
+		var statement = memberName.FirstAncestorOrSelf<StatementSyntax>();
+		if (statement != null) {
+			rw.RegisterAction<StatementSyntax>(statement, n =>
+				EmptyStatement().WithTriviaFrom(n).WithBlockComment(fullComment)
+			);
+
+			return memberName;
+		}
+
+		return memberName.WithBlockComment(fullComment);
+	};
+
 	public static SyntaxNode RewriteIsJourneyMode(MemberUseRewriter rw, IOperation op, IdentifierNameSyntax memberName)
 	{
 		// memberName corresponds to the identifier "GameModeInfo" in an expression like Main.GameModeInfo.IsJourneyMode

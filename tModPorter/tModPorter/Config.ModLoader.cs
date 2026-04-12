@@ -28,11 +28,12 @@ public static partial class Config
 		RenameType(from: "Terraria.ModLoader.ModMountData", to: "Terraria.ModLoader.ModMount");
 		RenameType(from: "Terraria.ModLoader.ModWorld",		to: "Terraria.ModLoader.ModSystem");
 		RenameType(from: "Terraria.ModLoader.ModHotKey",	to: "Terraria.ModLoader.ModKeybind");
+		RenameType(from: "Terraria.ModLoader.NPCSpawnInfo", to: "Terraria.NPC+Spawner");
 
 		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "text",			to: "Text");
 		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "mod",			to: "Mod");
-		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "isModifier",		to: "IsModifier");
-		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "isModifierBad",	to: "IsModifierBad");
+		RefactorInstanceMember("Terraria.ModLoader.TooltipLine", "isModifier", RemoveContainingStatementOrInitializer("Use OverrideColor or other tooltip styling logic instead."));
+		RefactorInstanceMember("Terraria.ModLoader.TooltipLine", "isModifierBad", RemoveContainingStatementOrInitializer("Use OverrideColor or other tooltip styling logic instead."));
 		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "overrideColor",	to: "OverrideColor");
 
 		RenameInstanceField("Terraria.ModLoader.ModProjectile", from: "aiType",								  to: "AIType");
@@ -40,7 +41,7 @@ public static partial class Config
 		RenameInstanceField("Terraria.ModLoader.ModProjectile", from: "drawOffsetX",				 		  to: "DrawOffsetX");
 		RenameInstanceField("Terraria.ModLoader.ModProjectile", from: "drawOriginOffsetY",					  to: "DrawOriginOffsetY");
 		RenameInstanceField("Terraria.ModLoader.ModProjectile", from: "drawOriginOffsetX",					  to: "DrawOriginOffsetX");
-		RenameInstanceField("Terraria.ModLoader.ModProjectile", from: "drawHeldProjInFrontOfHeldItemAndArms", to: "DrawHeldProjInFrontOfHeldItemAndArms");
+		RefactorInstanceMember("Terraria.ModLoader.ModProjectile", "drawHeldProjInFrontOfHeldItemAndArms", RemoveContainingStatementOrInitializer("Replace with Projectile.drawLayer = ProjectileDrawLayerID.HeldProjOverHand."));
 
 		RenameInstanceField("Terraria.ModLoader.ModNPC", from: "aiType",		to: "AIType");
 		RenameInstanceField("Terraria.ModLoader.ModNPC", from: "animationType", to: "AnimationType");
@@ -69,7 +70,7 @@ public static partial class Config
 		RefactorInstanceMember("Terraria.ModLoader.ModTile",		"disableSmartCursor",	Removed("Use TileID.Sets.DisableSmartCursor instead"));
 		RefactorInstanceMember("Terraria.ModLoader.ModTile",		"OpenDoorID",	        Removed("Use TileID.Sets.OpenDoorID instead"));
 		RefactorInstanceMember("Terraria.ModLoader.ModTile",		"CloseDoorID",	        Removed("Use TileID.Sets.CloseDoorID instead"));
-		RefactorInstanceMember("Terraria.ModLoader.NPCSpawnInfo",  "PlanteraDefeated",     Removed("Use (NPC.downedPlantBoss && Main.hardMode) instead"));
+		RefactorInstanceMember("Terraria.NPC.Spawner", "planteraDefeated", RemoveContainingStatementOrInitializer("Use (NPC.downedPlantBoss && Main.hardMode) instead."));
 		RefactorInstanceMethodCall("Terraria.ModLoader.ModTile",	"SetModTree",			Removed("Assign GrowsOnTileId to this tile type in ModTree.SetStaticDefaults instead"));
 		RefactorInstanceMethodCall("Terraria.ModLoader.ModTile",	"SetModCactus",			Removed("Assign GrowsOnTileId to this tile type in ModCactus.SetStaticDefaults instead"));
 		RefactorInstanceMethodCall("Terraria.ModLoader.ModTile",	"SetModPalmTree",		Removed("Assign GrowsOnTileId to this tile type in ModPalmTree.SetStaticDefaults instead"));
@@ -376,24 +377,23 @@ public static partial class Config
 		RenameInstanceField("Terraria.ModLoader.ModWaterStyle",		from: "Type",		to: "Slot");
 		RenameInstanceField("Terraria.ModLoader.ModWaterfallStyle", from: "Type",		to: "Slot");
 
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "desertCave",			to: "DesertCave");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "granite",				to: "Granite");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "invasion",			to: "Invasion");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "lihzahrd",			to: "Lihzahrd");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "marble",				to: "Marble");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "planteraDefeated",	to: "PlanteraDefeated");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "player",				to: "Player");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "playerFloorX",		to: "PlayerFloorX");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "playerFloorY",		to: "PlayerFloorY");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "playerInTown",		to: "PlayerInTown");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "playerSafe",			to: "PlayerSafe");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "safeRangeX",			to: "SafeRangeX");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "sky",					to: "Sky");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "spawnTileType",		to: "SpawnTileType");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "spawnTileX",			to: "SpawnTileX");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "spawnTileY",			to: "SpawnTileY");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "spiderCave",			to: "SpiderCave");
-		RenameInstanceField("Terraria.ModLoader.NPCSpawnInfo", from: "water",				to: "Water");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "desertCave",		to: "spawnUndergroundDesert");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "granite",			to: "nearGranite");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "invasion",			to: "invaders");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "lihzahrd",			to: "ZoneLihzhardTemple");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "marble",			to: "nearMarble");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "player",			to: "Player");
+		RefactorInstanceMember("Terraria.NPC.Spawner", "playerFloorX", RemoveContainingStatementOrInitializer("Player floor coordinates are no longer exposed on NPC.Spawner. Use SpawnTileX/SpawnTileY or player position data instead."));
+		RefactorInstanceMember("Terraria.NPC.Spawner", "playerFloorY", RemoveContainingStatementOrInitializer("Player floor coordinates are no longer exposed on NPC.Spawner. Use SpawnTileX/SpawnTileY or player position data instead."));
+		RenameInstanceField("Terraria.NPC.Spawner", from: "playerInTown",		to: "spawnFriendly");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "playerSafe",		to: "noWorms");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "safeRangeX",		to: "SafeRangeX");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "sky",				to: "skyMob");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "spawnTileType",		to: "SpawnTileType");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "spawnTileX",		to: "SpawnTileX");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "spawnTileY",		to: "SpawnTileY");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "spiderCave",		to: "spawnSpider");
+		RenameInstanceField("Terraria.NPC.Spawner", from: "water",				to: "waterTile");
 
 		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "BuffType",		ToFindTypeCall("Terraria.ModLoader.ModBuff"));
 		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "DustType",		ToFindTypeCall("Terraria.ModLoader.ModDust"));
@@ -438,7 +438,7 @@ public static partial class Config
 
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "position", to: "Position");
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "itemLocation", to: "ItemLocation");
-		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "drawHeldProjInFrontOfHeldItemAndBody", to: "heldProjOverHand");
+		RefactorInstanceMember("Terraria.DataStructures.PlayerDrawSet", "drawHeldProjInFrontOfHeldItemAndBody", RemoveContainingStatementOrInitializer("No direct PlayerDrawSet equivalent exists. Check projectile.drawLayer instead."));
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "drawHair", to: "fullHair");
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "drawAltHair", to: "hatHair");
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "headArmorShader", to: "cHead");
@@ -585,6 +585,6 @@ public static partial class Config
 		HookRemoved("Terraria.ModLoader.ModProjectile", "DrawBehind", "Set Projectile.drawLayer instead");
 		HookRemoved("Terraria.ModLoader.GlobalProjectile", "DrawBehind", "Set Projectile.drawLayer instead");
 
-		RefactorInstanceMember("Terraria.ModLoader.ModProjectile", "DrawHeldProjInFrontOfHeldItemAndArms", Removed("Replace with Projectile.drawLayer = ProjectileDrawLayerID.HeldProjOverHand;"));
+		RefactorInstanceMember("Terraria.ModLoader.ModProjectile", "DrawHeldProjInFrontOfHeldItemAndArms", RemoveContainingStatementOrInitializer("Replace with Projectile.drawLayer = ProjectileDrawLayerID.HeldProjOverHand."));
 	}
 }

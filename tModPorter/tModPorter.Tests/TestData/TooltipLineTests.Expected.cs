@@ -6,15 +6,12 @@ public class TooltipLineTests
 		TooltipLine line = new TooltipLine(null, "", "");
 		string mod = line.Mod;
 		line.Text = "";
-		line.IsModifier = true;
-		line.IsModifierBad = false;
+		;/* tModPorter Note: Removed. Use OverrideColor or other tooltip styling logic instead. */
+		;/* tModPorter Note: Removed. Use OverrideColor or other tooltip styling logic instead. */
 		line.OverrideColor = null;
 
 		line = new TooltipLine(null, "", "") {
-			Text = "",
-			IsModifier = true,
-			IsModifierBad = false,
-			OverrideColor = null
+			Text = "",			OverrideColor = null
 		};
 	}
 }

@@ -1,28 +1,27 @@
+using Terraria;
 using Terraria.ModLoader;
 
 public class NPCSpawnInfoTest
 {
 	void Method() {
-		NPCSpawnInfo info = default;
-		var a = info.DesertCave;
-		var b = info.Granite;
-		var c = info.Invasion;
-		var d = info.Lihzahrd;
-		var e = info.Marble;
-		#if COMPILE_ERROR
-		var f = info.PlanteraDefeated/* tModPorter Note: Removed. Use (NPC.downedPlantBoss && Main.hardMode) instead */;
-		#endif
+		NPC.Spawner info = default;
+		var a = info.spawnUndergroundDesert;
+		var b = info.nearGranite;
+		var c = info.invaders;
+		var d = info.ZoneLihzhardTemple;
+		var e = info.nearMarble;
+		;/* tModPorter Note: Removed. Use (NPC.downedPlantBoss && Main.hardMode) instead. */
 		var g = info.Player;
-		var h = info.PlayerFloorX;
-		var i = info.PlayerFloorY;
-		var j = info.PlayerInTown;
-		var k = info.PlayerSafe;
+		;/* tModPorter Note: Removed. Player floor coordinates are no longer exposed on NPC.Spawner. Use SpawnTileX/SpawnTileY or player position data instead. */
+		;/* tModPorter Note: Removed. Player floor coordinates are no longer exposed on NPC.Spawner. Use SpawnTileX/SpawnTileY or player position data instead. */
+		var j = info.spawnFriendly;
+		var k = info.noWorms;
 		var l = info.SafeRangeX;
-		var m = info.Sky;
+		var m = info.skyMob;
 		var n = info.SpawnTileType;
 		var o = info.SpawnTileX;
 		var p = info.SpawnTileY;
-		var q = info.SpiderCave;
-		var r = info.Water;
+		var q = info.spawnSpider;
+		var r = info.waterTile;
 	}
 }

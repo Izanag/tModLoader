@@ -18,7 +18,7 @@ public class PlayerDrawInfoTest
 		bool drawHands = info.drawHands; // Negated, the non-negated version (missingHand) is internal
 		bool drawArms = info.drawArms; // Negated, the non-negated version (missingArm) is internal
 #endif		
-		bool drawHeldProjInFrontOfHeldItemAndBody = info.heldProjOverHand;
+		;/* tModPorter Note: Removed. No direct PlayerDrawSet equivalent exists. Check projectile.drawLayer instead. */
 		bool drawHair = info.fullHair;
 		bool drawAltHair = info.hatHair;
 		//int hairShader = info.hairShader; // Can't be reasonably ported, hairDyePacked has a different representation and needs (un)packing

@@ -1,5 +1,6 @@
 using Terraria;
 using Terraria.Chat;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -20,7 +21,7 @@ public class SimpleRenamedVanillaMembersTest
 		var tileValue = Main.tileOreFinderPriority;
 		var worldRate = Main.desiredWorldTilesUpdateRate;
 		var lightMode = Lighting.LegacyEngine.Mode;
-		var technicallyABoss = NPCID.Sets.ShouldBeCountedAsBoss;
+		var technicallyABoss = NPCID.Sets.ShouldBeCountedAsBossForBestiary;
 		var homing = ProjectileID.Sets.CultistIsResistantTo;
 		// not-yet-implemented
 		var rasterizer = Main.Rasterizer;
@@ -49,13 +50,13 @@ public class SimpleRenamedVanillaMembersTest
 		var heartLantern = Main.SceneMetrics.HasHeartLantern;
 		var sunflower = Main.SceneMetrics.HasSunflower;
 
-		var expertDebuffTime = Main.GameModeInfo.DebuffTimeMultiplier;
-		var expertNPCDamage = Main.GameModeInfo.TownNPCDamageMultiplier;
-		var expertLife = Main.GameModeInfo.EnemyMaxLifeMultiplier;
-		var expertDamage = Main.GameModeInfo.EnemyDamageMultiplier;
-		var expertKnockBack = Main.GameModeInfo.KnockbackToEnemiesMultiplier;
-		var knockBackMultiplier = Main.GameModeInfo.KnockbackToEnemiesMultiplier;
-		var damageMultiplier = Main.GameModeInfo.EnemyDamageMultiplier;
+		var expertDebuffTime = GameDifficultyData.DebuffTimeMultiplier.Sample(Main.Difficulty);
+		var expertNPCDamage = GameDifficultyData.TownNPCDamageMultiplier.Sample(Main.Difficulty);
+		var expertLife = GameDifficultyData.EnemyMaxLifeMultiplier.Sample(Main.Difficulty);
+		var expertDamage = GameDifficultyData.EnemyDamageMultiplier.Sample(Main.Difficulty);
+		var expertKnockBack = GameDifficultyData.KnockbackToEnemiesMultiplier.Sample(Main.Difficulty);
+		var knockBackMultiplier = GameDifficultyData.KnockbackToEnemiesMultiplier.Sample(Main.Difficulty);
+		var damageMultiplier = GameDifficultyData.EnemyDamageMultiplier.Sample(Main.Difficulty);
 
 		bool isJourney = Main.IsJourneyMode;
 		_ = Main.PipsUseGrid;
@@ -142,7 +143,7 @@ public class SimpleRenamedVanillaMembersTest
 #endif
 
 		var item = new Item();
-		var owner = item.playerIndexTheItemIsReservedFor;
+		;/* tModPorter Note: Removed. Moved to WorldItem.playerIndexTheItemIsReservedFor. */
 		var vanity = item.hasVanityEffects;
 		item.DefaultToPlaceableWall(0);
 
@@ -163,12 +164,12 @@ public class SimpleRenamedVanillaMembersTest
 
 		NPC npc = new NPC();
 		// not-yet-implemented
-		npc.damage = npc.GetAttackDamage_ScaledByStrength(80f); // int cast matches return type
+		npc.damage = npc.GetAttackDamage_ScaledByDifficulty(80f); // int cast matches return type
 		// instead-expect
-		npc.damage = (int)(80f * Main.GameModeInfo.EnemyDamageMultiplier); // int cast matches return type
+		npc.damage = (int)(80f * GameDifficultyData.EnemyDamageMultiplier.Sample(Main.Difficulty)); // int cast matches return type
 #if COMPILE_ERROR
 #endif
-		npc.netSkip/* tModPorter Note: Removed. No longer necessary when setting life <= 0 and was never necessary when setting active = false */ = -1;
+		;/* tModPorter Note: Removed. No longer necessary when setting life <= 0 and was never necessary when setting active = false. */
 
 		// not-yet-implemented
 		Utils.TileActionAttempt cut = DelegateMethods.CutTiles;
