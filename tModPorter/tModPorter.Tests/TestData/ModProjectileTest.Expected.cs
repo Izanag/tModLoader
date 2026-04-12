@@ -15,7 +15,7 @@ public class ModProjectileTest : ModProjectile
 		Console.Write(DrawOffsetX);
 		Console.Write(DrawOriginOffsetY);
 		Console.Write(DrawOriginOffsetX);
-		Console.Write(default(bool)/* tModPorter Note: Removed. Replace with Projectile.drawLayer = ProjectileDrawLayerID.HeldProjOverHand. */);
+		;/* tModPorter Note: Removed. Replace with Projectile.drawLayer = ProjectileDrawLayerID.HeldProjOverHand. */
 	}
 
 	public override void SetStaticDefaults()
@@ -24,7 +24,7 @@ public class ModProjectileTest : ModProjectile
 		;/* tModPorter Note: Removed. Now true by default. See Projectile.usesOwnerLight and Projectile.drawLayer for more details. */
 	}
 
-	public override bool? CanDamage()/* tModPorter Suggestion: Return null instead of true */ { return false; }
+	public override Nullable<bool> CanDamage()/* tModPorter Suggestion: Return null instead of true */ { return false; }
 
 	public override bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac) { return true; }
 

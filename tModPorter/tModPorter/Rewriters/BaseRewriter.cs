@@ -25,7 +25,11 @@ public abstract class BaseRewriter : CSharpSyntaxRewriter
 		extraNodeVisitors.Clear();
 		model = await doc.GetSemanticModelAsync() ?? throw new Exception("No semantic model: " + doc.FilePath);
 		var root = await doc.GetSyntaxRootAsync() ?? throw new Exception("No syntax root: " + doc.FilePath);
-		return doc.WithSyntaxRoot(Visit(root));
+		var newRoot = Visit(root);
+		if (ReferenceEquals(newRoot, root) || newRoot.ToFullString() == root.ToFullString())
+			return doc;
+
+		return doc.WithSyntaxRoot(newRoot);
 	}
 
 	[return: NotNullIfNotNull("node")]
