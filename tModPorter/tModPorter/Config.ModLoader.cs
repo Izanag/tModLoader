@@ -29,6 +29,8 @@ public static partial class Config
 		RenameType(from: "Terraria.ModLoader.ModWorld",		to: "Terraria.ModLoader.ModSystem");
 		RenameType(from: "Terraria.ModLoader.ModHotKey",	to: "Terraria.ModLoader.ModKeybind");
 		RenameType(from: "Terraria.ModLoader.NPCSpawnInfo", to: "Terraria.NPC+Spawner");
+		RenameType(from: "Terraria.GameContent.Creative.On_CreativeUI.orig_SacrificeItem_refItem_refInt32_bool", to: "Terraria.GameContent.Creative.On_CreativeUI.orig_SacrificeItem_refItem_refInt32_bool_bool");
+		RenameStaticField("Terraria.GameContent.Creative.On_CreativeUI", from: "SacrificeItem_refItem_refInt32_bool", to: "SacrificeItem_refItem_refInt32_bool_bool");
 
 		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "text",			to: "Text");
 		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "mod",			to: "Mod");

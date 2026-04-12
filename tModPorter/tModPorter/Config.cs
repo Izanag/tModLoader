@@ -13,6 +13,7 @@ public static partial class Config
 		new HookRewriter(),
 		new RecipeRewriter(),
 		new HookGenRewriter(),
+		new RenameRewriter(),
 	};
 
 	static Config() {

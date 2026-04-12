@@ -12,6 +12,26 @@ public class HookGenRewriter : BaseRewriter {
 
 	private List<string> refactoredUsingPrefixes = new();
 
+	private static bool IsCreativeSacrificeOrigType(TypeSyntax typeSyntax)
+	{
+		var text = typeSyntax.ToString();
+		return text.EndsWith("On_CreativeUI.orig_SacrificeItem_refItem_refInt32_bool")
+			|| text.EndsWith("On_CreativeUI.orig_SacrificeItem_refItem_refInt32_bool_bool");
+	}
+
+	private static TypeSyntax RewriteCreativeSacrificeOrigType(TypeSyntax typeSyntax)
+	{
+		var text = typeSyntax.ToString();
+		const string oldSuffix = "On_CreativeUI.orig_SacrificeItem_refItem_refInt32_bool";
+		const string newSuffix = "On_CreativeUI.orig_SacrificeItem_refItem_refInt32_bool_bool";
+
+		if (!text.EndsWith(oldSuffix))
+			return typeSyntax;
+
+		var prefix = text[..^oldSuffix.Length];
+		return Name(prefix + newSuffix).WithTriviaFrom(typeSyntax);
+	}
+
 	public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
 		if (!IdentifierNameInvalid(node, out var op, out var targetType, out bool isInvoke))
 			return node;
@@ -24,6 +44,37 @@ public class HookGenRewriter : BaseRewriter {
 			return node;
 
 		return IdentifierName(newType.Name).WithTriviaFrom(node);
+	}
+
+	public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+	{
+		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
+
+		if (node.ParameterList.Parameters.Count != 4 || !IsCreativeSacrificeOrigType(node.ParameterList.Parameters[0].Type))
+			return node;
+
+		var parameters = node.ParameterList.Parameters.Replace(node.ParameterList.Parameters[0], node.ParameterList.Parameters[0].WithType(RewriteCreativeSacrificeOrigType(node.ParameterList.Parameters[0].Type)));
+		var selfParameter = SyntaxFactory.Parameter(Identifier("self"))
+			.WithType(UseType("Terraria.GameContent.Creative.CreativeUI").WithTrailingTrivia(Space));
+		var finalParameter = SyntaxFactory.Parameter(Identifier("onlySacrificeIfItWouldFinishResearch"))
+			.WithType(PredefinedType(Token(SyntaxKind.BoolKeyword)).WithTrailingTrivia(Space));
+
+		node = node.WithParameterList(node.ParameterList.WithParameters(parameters.Insert(1, selfParameter).Add(finalParameter)).NormalizeWhitespace());
+
+		if (node.Body == null)
+			return node;
+
+		var origInvocations = node.Body.DescendantNodes()
+			.OfType<InvocationExpressionSyntax>()
+			.Where(invoke => invoke.Expression is IdentifierNameSyntax { Identifier.Text: "orig" } && invoke.ArgumentList.Arguments.Count == 3)
+			.ToArray();
+
+		node = node.ReplaceNodes(origInvocations, (_, n) => {
+			var args = n.ArgumentList.Arguments;
+			return n.WithArgumentList(n.ArgumentList.WithArguments(args.Insert(0, Argument(IdentifierName("self"))).Add(Argument(IdentifierName("onlySacrificeIfItWouldFinishResearch")))).NormalizeWhitespace());
+		});
+
+		return node;
 	}
 
 	public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)	{
