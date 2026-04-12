@@ -113,6 +113,12 @@ public abstract class BaseRewriter : CSharpSyntaxRewriter
 				targetType = model.GetTypeInfo(memberAccess.Expression).Type;
 				return true;
 
+			case MemberAccessExpressionSyntax memberAccess when node == memberAccess.Name && memberAccess.Parent is AssignmentExpressionSyntax assignment && assignment.Left == memberAccess && model.GetOperation(assignment) is IInvalidOperation:
+				op = model.GetOperation(memberAccess) ?? model.GetOperation(assignment);
+				targetType = model.GetTypeInfo(memberAccess.Expression).Type;
+				isInvoke = false;
+				return op != null;
+
 			case MemberBindingExpressionSyntax memberBinding when MemberReferenceInvalid(memberBinding, out op, out isInvoke) && op.ChildOperations.First() is IConditionalAccessInstanceOperation target:
 				targetType = target.Type;
 				return true;

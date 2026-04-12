@@ -23,7 +23,8 @@ public class MemberUseRewriter : BaseRewriter {
 
 
 	public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
-		if (!IdentifierNameInvalid(node, out var op, out var targetType, out bool isInvoke) || op == null || isInvoke)
+		bool invalid = IdentifierNameInvalid(node, out var op, out var targetType, out bool isInvoke);
+		if ((!invalid || op == null || isInvoke) && !TryGetWorldItemActiveAssignment(node, ref op, ref targetType))
 			return node;
 
 		if (targetType == null)
@@ -35,6 +36,22 @@ public class MemberUseRewriter : BaseRewriter {
 			return node;
 
 		return handler.handler.Invoke(this, op, node);
+	}
+
+	private bool TryGetWorldItemActiveAssignment(IdentifierNameSyntax node, ref IOperation op, ref ITypeSymbol targetType)
+	{
+		if (node.Identifier.Text != "active" ||
+			node.Parent is not MemberAccessExpressionSyntax memberAccess ||
+			memberAccess.Parent is not AssignmentExpressionSyntax assignment ||
+			assignment.Left != memberAccess)
+			return false;
+
+		targetType = model.GetTypeInfo(memberAccess.Expression).Type;
+		if (targetType == null || !targetType.InheritsFrom("Terraria.WorldItem"))
+			return false;
+
+		op = model.GetOperation(memberAccess) ?? model.GetOperation(assignment);
+		return op != null;
 	}
 
 	public static RewriteMemberUse DamageTypeField(string className, string comment = null) => (rw, op, memberName) => {
@@ -187,7 +204,11 @@ public class MemberUseRewriter : BaseRewriter {
 		if (memberName.Parent is not MemberAccessExpressionSyntax access)
 			return memberName;
 
-		if (op.Parent is not IAssignmentOperation { Target: var target } assignment || target != op)
+		bool isAssignmentTarget =
+			op.Parent is IAssignmentOperation { Target: var target } && target == op ||
+			access.Parent is AssignmentExpressionSyntax assignmentSyntax && assignmentSyntax.Left == access;
+
+		if (!isAssignmentTarget)
 			return memberName;
 
 		rw.RegisterAction<MemberAccessExpressionSyntax>(access, n =>

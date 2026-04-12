@@ -28,7 +28,7 @@ public class ItemToWorldItemTest
 #if COMPILE_ERROR
 		foreach (WorldItem item in Main.item) {
 			if (item.active && !item.beingGrabbed && hitbox.Intersects(item.Hitbox)) {
-				item.active = false;
+				item.inner.active = false;
 
 				NetMessage.SendData(MessageID.SyncItem, number: item.whoAmI);
 			}
