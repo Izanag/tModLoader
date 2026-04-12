@@ -185,20 +185,46 @@ public class HookRewriter : BaseRewriter
 	private static Dictionary<int, int> MatchParameters(IParameterSymbol[] oldParameters, IParameterSymbol[] newParameters)
 	{
 		var matches = new Dictionary<int, int>();
-		int oldIndex = oldParameters.Length - 1;
-		int newIndex = newParameters.Length - 1;
+		if (oldParameters.Length == 0 || newParameters.Length == 0)
+			return matches;
 
-		while (oldIndex >= 0 && newIndex >= 0) {
-			if (ParametersCompatible(oldParameters[oldIndex], newParameters[newIndex])) {
-				matches[oldIndex] = newIndex;
-				oldIndex--;
+		int[,] bestScores = new int[oldParameters.Length + 1, newParameters.Length + 1];
+		for (int oldIndex = oldParameters.Length - 1; oldIndex >= 0; oldIndex--) {
+			for (int newIndex = newParameters.Length - 1; newIndex >= 0; newIndex--) {
+				int bestScore = Math.Max(bestScores[oldIndex + 1, newIndex], bestScores[oldIndex, newIndex + 1]);
+				int matchScore = ParameterMatchScore(oldParameters[oldIndex], newParameters[newIndex]);
+				if (matchScore > 0)
+					bestScore = Math.Max(bestScore, matchScore + bestScores[oldIndex + 1, newIndex + 1]);
+
+				bestScores[oldIndex, newIndex] = bestScore;
+			}
+		}
+
+		int i = 0;
+		int j = 0;
+		while (i < oldParameters.Length && j < newParameters.Length) {
+			if (bestScores[i, j] == bestScores[i, j + 1]) {
+				j++;
+				continue;
 			}
 
-			newIndex--;
+			int matchScore = ParameterMatchScore(oldParameters[i], newParameters[j]);
+			if (matchScore > 0 && bestScores[i, j] == matchScore + bestScores[i + 1, j + 1]) {
+				matches[i] = j;
+				i++;
+				j++;
+				continue;
+			}
+
+			i++;
 		}
 
 		return matches;
 	}
+
+	private static int ParameterMatchScore(IParameterSymbol oldParam, IParameterSymbol newParam) =>
+		!ParametersCompatible(oldParam, newParam) ? 0 :
+		oldParam.Name == newParam.Name ? 2 : 1;
 
 	private bool RewriteModifiers(ISymbol sym, ISymbol baseSym, SyntaxTokenList modifiers, out SyntaxTokenList newModifiers) {
 		if (!AccessibilityMismatch(sym, baseSym)) {

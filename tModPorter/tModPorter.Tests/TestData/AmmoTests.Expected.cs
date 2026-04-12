@@ -23,15 +23,15 @@ public class AmmoGlobalItemTest : GlobalItem
 	}
 
 #if COMPILE_ERROR
-	public override void PickAmmo(Item weapon, Item ammo, Player player, ref int type, ref float speed, ref StatModifier damage, ref float knockback) {
+	public override void PickAmmo(Item weapon, Item item, Player player, ref int type, ref float speed, ref StatModifier damage, ref float knockback) {
 	}
 #endif
 
 	// item -> weapon
-	public override bool CanConsumeAmmo(Item weapon, Item ammo, Player player) { return true; /* Empty */ }
+	public override bool CanConsumeAmmo(Item weapon, Item item, Player player) { return true; /* Empty */ }
 
 	// item -> weapon
-	public override void OnConsumeAmmo(Item weapon, Item ammo, Player player) { /* Empty */ }
+	public override void OnConsumeAmmo(Item weapon, Item item, Player player) { /* Empty */ }
 }
 
 public class AmmoModPlayerItemTest : ModPlayer
