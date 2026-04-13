@@ -74,6 +74,7 @@ public class HookRewriter : BaseRewriter
 		RegisterParameterRenames(sym, node);
 		RegisterBaseMethodInvocationRewrites(sym, node);
 		RegisterModifyWeaponDamageBodyRewrites(sym, node);
+		RegisterCatchFishBodyRewrites(sym, node);
 		RegisterRemovedHookBodyRewrites(sym, node);
 		RegisterRemovedHookStaticDefaultsMigrations(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
@@ -192,6 +193,51 @@ public class HookRewriter : BaseRewriter
 				continue;
 
 			RegisterAction<AssignmentExpressionSyntax>(assignment, n => n.WithLeft(replacementLeft.WithTriviaFrom(n.Left)));
+		}
+	}
+
+	private void RegisterCatchFishBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (node.Body == null || sym.Name != "CatchFish" || !sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer"))
+			return;
+
+		var parameterMap = sym.Parameters.ToDictionary(parameter => parameter.Name, parameter => parameter, StringComparer.Ordinal);
+		var replacements = new Dictionary<IParameterSymbol, ExpressionSyntax>(SymbolEqualityComparer.Default);
+
+		void Map(string parameterName, ExpressionSyntax replacement)
+		{
+			if (parameterMap.TryGetValue(parameterName, out var parameter))
+				replacements[parameter] = replacement;
+		}
+
+		ExpressionSyntax attemptAccess(string memberName) => MemberAccessExpression(IdentifierName("attempt"), memberName);
+		ExpressionSyntax conditionsAccess(string memberName) => MemberAccessExpression(attemptAccess("playerFishingConditions"), memberName);
+
+		Map("fishingRod", conditionsAccess("Pole"));
+		Map("bait", conditionsAccess("Bait"));
+		Map("power", attemptAccess("fishingLevel"));
+		Map("liquidType", ConditionalExpression(
+			attemptAccess("inHoney"),
+			LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(2)),
+			ConditionalExpression(
+				attemptAccess("inLava"),
+				LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(1)),
+				LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0))
+			)
+		));
+		Map("poolSize", attemptAccess("waterTilesCount"));
+		Map("worldLayer", attemptAccess("heightLevel"));
+		Map("questFish", attemptAccess("questFish"));
+
+		if (replacements.Count == 0)
+			return;
+
+		foreach (var identifier in node.Body.DescendantNodes().OfType<IdentifierNameSyntax>()) {
+			if (model.GetSymbolInfo(identifier).Symbol is not IParameterSymbol parameter ||
+				!replacements.TryGetValue(parameter, out var replacement))
+				continue;
+
+			RegisterAction<IdentifierNameSyntax>(identifier, n => replacement.WithTriviaFrom(n));
 		}
 	}
 

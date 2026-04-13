@@ -47,26 +47,14 @@ public class ModPlayerTest : ModPlayer
 
 	public override void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int caughtType, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition) {
 		// The following are 1.3 parameters written out using new 1.4 syntax
-		// not-yet-implemented
 		Item fishingRodLocal = attempt.playerFishingConditions.Pole;
 		Item baitLocal = attempt.playerFishingConditions.Bait;
 		int powerLocal = attempt.fishingLevel;
-		int liquidTypeLocal = attempt.inHoney ? 2 : attempt.inLava ? 1 : 0;
+		int liquidTypeLocal = attempt.inHoney?2:attempt.inLava?1:0;
 		int poolSizeLocal = attempt.waterTilesCount;
 		int worldLayerLocal = attempt.heightLevel;
 		int questFishLocal = attempt.questFish;
-		ref int caughtTypeLocal = ref itemDrop;
-		// instead-expect
-#if COMPILE_ERROR
-		Item fishingRodLocal = fishingRod;
-		Item baitLocal = bait;
-		int powerLocal = power;
-		int liquidTypeLocal = liquidType;
-		int poolSizeLocal = poolSize;
-		int worldLayerLocal = worldLayer;
-		int questFishLocal = questFish;
 		ref int caughtTypeLocal = ref caughtType;
-#endif
 		// ref int junkLocal = ref junk; // Can't really be transformed, unless you check for fisher.rolledItemDrop = Main.rand.Next(2337, 2340);
 	}
 
