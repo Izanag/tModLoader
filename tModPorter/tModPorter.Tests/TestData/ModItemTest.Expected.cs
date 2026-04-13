@@ -46,7 +46,7 @@ public class ModItemTest : ModItem
 	public override void PreReforge()/* tModPorter Note: Use CanReforge instead for logic determining if a reforge can happen. */ { return false; /* comment */ }
 #endif
 
-	public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */ { return true; /* comment */ }
+	public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */ { return true; /* comment */ }
 
 	public override void HoldStyle(Player player, Rectangle heldItemFrame) { /* comment */ }
 
@@ -61,16 +61,9 @@ public class ModItemTest : ModItem
 	public override void ModifyWeaponCrit(Player player, ref float crit) { /* Empty */ }
 
 	public override void ModifyWeaponDamage(Player player, ref StatModifier damage) {
-		// not-yet-implemented
 		damage += 0.1f;
 		damage *= 0.2f;
 		damage.Flat += 4;
-		// instead-expect
-#if COMPILE_ERROR
-		add += 0.1f;
-		mult *= 0.2f;
-		flat += 4;
-#endif
 	}
 
 	public override void OnCreated(ItemCreationContext context) {
@@ -101,7 +94,7 @@ public class ModItemTest : ModItem
 	public override void ExtractinatorUse(int extractinatorBlockType, ref int resultType, ref int resultStack) { /* Empty */ }
 
 	public override void ModifyHitNPC(Player player, NPC target, ref NPC.HitModifiers modifiers) { }
-	public override void OnHitNPC(Player player, NPC target, NPC.HitInfo hit, int damageDone) { }
+	public override void OnHitNPC(Player player, NPC target, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitPvp(Player player, Player target, ref Player.HurtModifiers modifiers) { }
 	public override void OnHitPvp(Player player, Player target, Player.HurtInfo hurtInfo) { }
 

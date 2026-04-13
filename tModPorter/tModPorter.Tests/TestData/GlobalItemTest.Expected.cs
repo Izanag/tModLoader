@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
@@ -8,7 +9,7 @@ public class GlobalItemTest : GlobalItem
 {
 	protected override bool CloneNewInstances => true;
 
-	public override bool? UseItem(Item item, Player player)/* tModPorter Suggestion: Return null instead of false */ => false;
+	public override Nullable<bool> UseItem(Item item, Player player)/* tModPorter Suggestion: Return null instead of false */ => false;
 
 #if COMPILE_ERROR
 	public override void PreReforge(Item item)/* tModPorter Note: Use CanReforge instead for logic determining if a reforge can happen. */ { return false; /* comment */ }
@@ -25,16 +26,9 @@ public class GlobalItemTest : GlobalItem
 	public override void ModifyWeaponCrit(Item item, Player player, ref float crit) { /* Empty */ }
 
 	public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage) {
-		// not-yet-implemented
 		damage += 0.1f;
 		damage *= 0.2f;
 		damage.Flat += 4;
-		// instead-expect
-#if COMPILE_ERROR
-		add += 0.1f;
-		mult *= 0.2f;
-		flat += 4;
-#endif
 	}
 
 	public override void OnCreated(Item item, ItemCreationContext context) { }
@@ -62,7 +56,7 @@ public class GlobalItemTest : GlobalItem
 	public override void ExtractinatorUse(int extractType, int extractinatorBlockType, ref int resultType, ref int resultStack) { /* Empty */ }
 
 	public override void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers) { }
-	public override void OnHitNPC(Item item, Player player, NPC target, NPC.HitInfo hit, int damageDone) { }
+	public override void OnHitNPC(Item item, Player player, NPC target, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers) { }
 	public override void OnHitPvp(Item item, Player player, Player target, Player.HurtInfo hurtInfo) { }
 }

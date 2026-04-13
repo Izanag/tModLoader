@@ -73,6 +73,7 @@ public class HookRewriter : BaseRewriter
 		var sym = model.GetDeclaredSymbol(node);
 		RegisterParameterRenames(sym, node);
 		RegisterBaseMethodInvocationRewrites(sym, node);
+		RegisterModifyWeaponDamageBodyRewrites(sym, node);
 		RegisterRemovedHookBodyRewrites(sym, node);
 		RegisterRemovedHookStaticDefaultsMigrations(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
@@ -156,6 +157,42 @@ public class HookRewriter : BaseRewriter
 			.WithExpressionBody(null)
 			.WithSemicolonToken(default)
 			.WithBody(body);
+	}
+
+	private void RegisterModifyWeaponDamageBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (node.Body == null || sym.Name != "ModifyWeaponDamage")
+			return;
+
+		if (!(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer")))
+			return;
+
+		var parameterMap = sym.Parameters.ToDictionary(parameter => parameter.Name, parameter => parameter, StringComparer.Ordinal);
+		if (!parameterMap.TryGetValue("add", out var addParameter) ||
+			!parameterMap.TryGetValue("mult", out var multParameter) ||
+			!parameterMap.TryGetValue("flat", out var flatParameter))
+			return;
+
+		foreach (var assignment in node.Body.DescendantNodes().OfType<AssignmentExpressionSyntax>()) {
+			if (assignment.Left is not IdentifierNameSyntax identifier)
+				continue;
+
+			if (model.GetSymbolInfo(identifier).Symbol is not IParameterSymbol parameter)
+				continue;
+
+			ExpressionSyntax replacementLeft = null;
+			if (SymbolEqualityComparer.Default.Equals(parameter, addParameter) || SymbolEqualityComparer.Default.Equals(parameter, multParameter))
+				replacementLeft = IdentifierName("damage");
+			else if (SymbolEqualityComparer.Default.Equals(parameter, flatParameter))
+				replacementLeft = MemberAccessExpression(IdentifierName("damage"), "Flat");
+
+			if (replacementLeft == null)
+				continue;
+
+			RegisterAction<AssignmentExpressionSyntax>(assignment, n => n.WithLeft(replacementLeft.WithTriviaFrom(n.Left)));
+		}
 	}
 
 	private void RegisterRemovedHookBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)

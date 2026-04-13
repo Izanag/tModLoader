@@ -18,16 +18,9 @@ public class ModPlayerTest : ModPlayer
 	public override void ModifyWeaponCrit(Item item, ref float crit) { /* Empty */ }
 
 	public override void ModifyWeaponDamage(Item item, ref StatModifier damage) {
-		// not-yet-implemented
 		damage += 0.1f;
 		damage *= 0.2f;
 		damage.Flat += 4;
-		// instead-expect
-#if COMPILE_ERROR
-		add += 0.1f;
-		mult *= 0.2f;
-		flat += 4;
-#endif
 	}
 
 	public override void LoadData(TagCompound tag) { /* Empty */ }
@@ -37,7 +30,7 @@ public class ModPlayerTest : ModPlayer
 		return new TagCompound();
 	}
 
-	public override IEnumerable<Item> AddStartingItems(bool mediumCoreDeath)/* tModPorter Suggestion: Return an Item array to add to the players starting items. Use ModifyStartingInventory for modifying them if needed */ {
+	public override IEnumerable<Item> AddStartingItems(bool mediumcoreDeath)/* tModPorter Suggestion: Return an Item array to add to the players starting items. Use ModifyStartingInventory for modifying them if needed */ {
 		items.Add(9);
 	}
 
@@ -52,7 +45,7 @@ public class ModPlayerTest : ModPlayer
 
 	public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright) { /* Empty */ }
 
-	public override void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int npcSpawn, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition) {
+	public override void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int caughtType, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition) {
 		// The following are 1.3 parameters written out using new 1.4 syntax
 		// not-yet-implemented
 		Item fishingRodLocal = attempt.playerFishingConditions.Pole;
@@ -106,9 +99,9 @@ public class ModPlayerTest : ModPlayer
 
 	public override bool? CanHitNPCWithItem(Item item, NPC target) => null;
 	public override void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers)/* tModPorter If you don't need the Item, consider using ModifyHitNPC instead */ { }
-	public override void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damageDone)/* tModPorter If you don't need the Item, consider using OnHitNPC instead */ { }
+	public override void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damage)/* tModPorter If you don't need the Item, consider using OnHitNPC instead */ { }
 	public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)/* tModPorter If you don't need the Projectile, consider using ModifyHitNPC instead */ { }
-	public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)/* tModPorter If you don't need the Projectile, consider using OnHitNPC instead */ { }
+	public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damage)/* tModPorter If you don't need the Projectile, consider using OnHitNPC instead */ { }
 #if COMPILE_ERROR
 	public override void ModifyHitPvp(Item item, Player target, ref int damage, ref bool crit)/* tModPorter Note: Removed. Use ModifyHurt on the receiving player and check modifiers.PvP. Use modifiers.DamageSource.SourcePlayerIndex to get the attacking player */ { }
 	public override void OnHitPvp(Item item, Player target, int damage, bool crit)/* tModPorter Note: Removed. Use OnHurt on the receiving player and check info.PvP. Use info.DamageSource.SourcePlayerIndex to get the attacking player */ { }
