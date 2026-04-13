@@ -688,6 +688,14 @@ public class HookRewriter : BaseRewriter
 			return;
 		}
 
+		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalProjectile")) &&
+			sym.Name == "SingleGrappleHook") {
+			if (ReturnsLiteralNull(node))
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
 		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer") &&
 			sym.Name is "ModifyHitPvp" or "OnHitPvp" or "ModifyHitPvpWithProj" or "OnHitPvpWithProj") {
 			if (node.Body != null && !node.Body.Statements.Any())
