@@ -17,12 +17,16 @@ public class ModItemTest : ModItem
 		Console.Write(Item.accessory);
 		Item.useTime += 2;
 
-#if COMPILE_ERROR
 		Console.WriteLine(Item.maxStack == 1 || Item.AllowReforgeForStackableItem);
-		Item.CloneWithModdedDataFrom(Item)/* tModPorter Note: Removed. Use Clone, ResetPrefix or Refresh */;
-#endif
+		;/* tModPorter Note: Removed. Use Clone, ResetPrefix or Refresh */
 
 		Item.ResearchUnlockCount = 1;
+	}
+
+	public Item CloneCopy(Item source) {
+		Item itemCopy = new Item();
+		itemCopy = source.Clone()/* tModPorter Suggestion: Review whether ResetPrefix or Refresh are also needed. */;
+		return itemCopy;
 	}
 
 	public override void SetStaticDefaults()

@@ -493,7 +493,7 @@ public static partial class Config
 		RefactorInstanceMember("Terraria.Item", "IsCandidateForReforge", ReplaceContainingMemberAccess(expr =>
 			Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseExpression($"{expr}.maxStack == 1 || {expr}.AllowReforgeForStackableItem")
 		));
-		RefactorInstanceMethodCall("Terraria.Item", "CloneWithModdedDataFrom", Removed("Use Clone, ResetPrefix or Refresh"));
+		RefactorInstanceMethodCall("Terraria.Item", "CloneWithModdedDataFrom", CloneWithModdedDataFrom);
 		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "CreateTranslation", ToStaticMethodCall("Terraria.ModLoader.LocalizationLoader", "CreateTranslation", targetBecomesFirstArg: true));
 
 		// 1.4.3 -> 1.4.4

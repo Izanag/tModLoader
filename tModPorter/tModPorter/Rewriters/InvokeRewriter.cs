@@ -173,6 +173,35 @@ public partial class InvokeRewriter : BaseRewriter
 		return InvocationExpression(member, args).WithTriviaFrom(invoke);
 	};
 
+	public static RewriteInvoke CloneWithModdedDataFrom => (rw, invoke, _) => {
+		const string removalNote = "Note: Removed. Use Clone, ResetPrefix or Refresh";
+		const string reviewNote = "Suggestion: Review whether ResetPrefix or Refresh are also needed.";
+
+		if (invoke.ArgumentList.Arguments.Count != 1)
+			return invoke.WithBlockComment(removalNote);
+
+		if (invoke.Parent is ExpressionStatementSyntax expressionStatement) {
+			rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n =>
+				EmptyStatement().WithTriviaFrom(n).WithBlockComment(removalNote)
+			);
+			return invoke;
+		}
+
+		var sourceExpr = invoke.ArgumentList.Arguments[0].Expression;
+		var replacement = InvocationExpression(sourceExpr.WithoutTrivia(), "Clone").WithTriviaFrom(invoke);
+
+		var targetExpr = invoke.Expression switch {
+			MemberAccessExpressionSyntax memberAccess => memberAccess.Expression,
+			NameSyntax _ => ThisExpression(),
+			_ => null
+		};
+
+		if (targetExpr == null || !SyntaxFactory.AreEquivalent(targetExpr.WithoutTrivia(), sourceExpr.WithoutTrivia()))
+			replacement = replacement.WithBlockComment(reviewNote);
+
+		return replacement;
+	};
+
 	public static RewriteInvoke ConvertAddEquipTexture => (rw, invoke, methodName) => {
 		var paramOps = invoke.ArgumentList.Arguments.Select(arg => rw.model.GetOperation(arg.Expression)).ToArray();
 		var method = rw.model.Compilation.GetTypeByMetadataName("Terraria.ModLoader.EquipLoader").LookupMember<IMethodSymbol>("AddEquipTexture");

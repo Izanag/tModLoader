@@ -20,6 +20,12 @@ public class ModItemTest : ModItem
 		SacrificeTotal = 1;
 	}
 
+	public Item CloneCopy(Item source) {
+		Item itemCopy = new Item();
+		itemCopy = itemCopy.CloneWithModdedDataFrom(source);
+		return itemCopy;
+	}
+
 	public override void SetStaticDefaults()
 	{
 		Tooltip.SetDefault(
