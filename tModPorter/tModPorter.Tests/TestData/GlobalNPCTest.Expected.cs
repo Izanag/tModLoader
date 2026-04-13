@@ -21,11 +21,9 @@ public class GlobalNPCTest : GlobalNPC
 		spriteBatch.Draw(null, npc.Center - screenPos, drawColor);
 	}
 
-#if COMPILE_ERROR
 	public override bool CanHitNPC(NPC npc, NPC target)/* tModPorter Suggestion: Return true instead of null */ {
-		return null;
+		return true;
 	}
-#endif
 
 	public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossLifeScale)/* tModPorter Note: bossLifeScale -> balance (bossAdjustment is different, see the docs for details) */
 	{

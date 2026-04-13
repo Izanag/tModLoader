@@ -48,11 +48,9 @@ public class ModNPCTest : ModNPC
 
 	public override List<string> SetNPCNameList()/* tModPorter Suggestion: Return a list of names */ { return ["Name"]; }
 
-#if COMPILE_ERROR
 	public override bool CanHitNPC(NPC target)/* tModPorter Suggestion: Return true instead of null */ {
-		return null;
+		return true;
 	}
-#endif
 
 	public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossLifeScale)/* tModPorter Note: bossLifeScale -> balance (bossAdjustment is different, see the docs for details) */
 	{
