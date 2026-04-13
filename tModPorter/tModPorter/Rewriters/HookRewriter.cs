@@ -105,6 +105,12 @@ public class HookRewriter : BaseRewriter
 	{
 		if (sym?.Name == "AltTextures" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModNPC") && ReturnsEmptyStringArray(node))
 			RegisterAction<PropertyDeclarationSyntax>(node, _ => null);
+
+		if (sym != null &&
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") &&
+			sym.Name is "IgnoreDamageModifiers" or "OnlyShootOnSwing" &&
+			ReturnsLiteralFalse(node))
+			RegisterAction<PropertyDeclarationSyntax>(node, _ => null);
 	}
 
 	private void RegisterPreReforgeCanReforgeMigration(IMethodSymbol sym, MethodDeclarationSyntax node)
@@ -204,6 +210,10 @@ public class HookRewriter : BaseRewriter
 		IsEmptyStringArrayCreation(node.ExpressionBody?.Expression) ||
 		node.AccessorList?.Accessors is [{ Keyword.RawKind: (int)SyntaxKind.GetKeyword, Body.Statements: [ReturnStatementSyntax { Expression: { } expression }] }] &&
 			IsEmptyStringArrayCreation(expression);
+
+	private bool ReturnsLiteralFalse(PropertyDeclarationSyntax node) =>
+		node.ExpressionBody?.Expression.IsKind(SyntaxKind.FalseLiteralExpression) == true ||
+		node.AccessorList?.Accessors is [{ Keyword.RawKind: (int)SyntaxKind.GetKeyword, Body.Statements: [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.FalseLiteralExpression }] }];
 
 	private bool IsEmptyStringArrayCreation(ExpressionSyntax expression)
 	{

@@ -33,15 +33,7 @@ public class ModItemTest : ModItem
 		Terraria.ID.AmmoID.Sets.IsSpecialist[Type] = true;
 		ItemID.Sets.Torches[Type] = true;
 	}
-
-#if COMPILE_ERROR
-	public override bool IgnoreDamageModifiers/* tModPorter Note: Removed. If you returned true, consider leaving Item.DamageType as DamageClass.Default, or make a custom DamageClass which returns StatInheritanceData.None in GetModifierInheritance */ => false;
-
-	public override bool OnlyShootOnSwing/* tModPorter Note: Removed. If you returned true, set Item.useTime to a multiple of Item.useAnimation */ => false;
-#endif
-
 	protected override bool CloneNewInstances => false;
-
 	public override ModItem Clone(Item newEntity) { return null; }
 
 	public override bool CanReforge()/* tModPorter Note: Use CanReforge instead for logic determining if a reforge can happen. */ { return false; /* comment */ }
