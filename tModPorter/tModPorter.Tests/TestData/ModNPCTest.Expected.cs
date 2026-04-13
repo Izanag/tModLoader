@@ -39,13 +39,6 @@ public class ModNPCTest : ModNPC
 
 	public override bool CanTownNPCSpawn(int numTownNPCs)/* tModPorter Suggestion: Copy the implementation of NPC.SpawnAllowed_Merchant in vanilla if you to count money, and be sure to set a flag when unlocked, so you don't count every tick. */ => false;
 
-#if COMPILE_ERROR
-	// not-yet-implemented
-	public override string[] AltTextures/* tModPorter Suggestion: Create a ITownNPCProfile, in its GetTextureNPCShouldUse, check for npc.altTexture to return the texture you want. Then, use TownNPCProfile hook to return an instance of that ITownNPCProfile */ => new string[0];
-	// instead-expect
-	public override string[] AltTextures => new string[0];
-#endif
-
 	public override List<string> SetNPCNameList()/* tModPorter Suggestion: Return a list of names */ { return ["Name"]; }
 
 	public override bool CanHitNPC(NPC target)/* tModPorter Suggestion: Return true instead of null */ {

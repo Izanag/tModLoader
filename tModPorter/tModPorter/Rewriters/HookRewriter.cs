@@ -59,6 +59,7 @@ public class HookRewriter : BaseRewriter
 
 	public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node) {
 		var sym = model.GetDeclaredSymbol(node);
+		RegisterRemovedPropertyRewrites(sym, node);
 		node = (PropertyDeclarationSyntax)base.VisitPropertyDeclaration(node);
 		if (!SelectRefactor(sym, out var refactor))
 			return node;
@@ -98,6 +99,12 @@ public class HookRewriter : BaseRewriter
 			node = node.WithParameterList(node.ParameterList.WithBlockComment(refactor.comment));
 
 		return node;
+	}
+
+	private void RegisterRemovedPropertyRewrites(IPropertySymbol sym, PropertyDeclarationSyntax node)
+	{
+		if (sym?.Name == "AltTextures" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModNPC") && ReturnsEmptyStringArray(node))
+			RegisterAction<PropertyDeclarationSyntax>(node, _ => null);
 	}
 
 	private void RegisterPreReforgeCanReforgeMigration(IMethodSymbol sym, MethodDeclarationSyntax node)
@@ -192,6 +199,28 @@ public class HookRewriter : BaseRewriter
 	private static bool ReturnsLiteralNull(MethodDeclarationSyntax node) =>
 		node.ExpressionBody?.Expression.IsKind(SyntaxKind.NullLiteralExpression) == true ||
 		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.NullLiteralExpression }];
+
+	private bool ReturnsEmptyStringArray(PropertyDeclarationSyntax node) =>
+		IsEmptyStringArrayCreation(node.ExpressionBody?.Expression) ||
+		node.AccessorList?.Accessors is [{ Keyword.RawKind: (int)SyntaxKind.GetKeyword, Body.Statements: [ReturnStatementSyntax { Expression: { } expression }] }] &&
+			IsEmptyStringArrayCreation(expression);
+
+	private bool IsEmptyStringArrayCreation(ExpressionSyntax expression)
+	{
+		if (expression is ArrayCreationExpressionSyntax arrayCreation &&
+			arrayCreation.Type.ElementType is PredefinedTypeSyntax { Keyword.RawKind: (int)SyntaxKind.StringKeyword } &&
+			arrayCreation.Type.RankSpecifiers.Count == 1 &&
+			arrayCreation.Type.RankSpecifiers[0].Sizes.Count == 1 &&
+			arrayCreation.Type.RankSpecifiers[0].Sizes[0] is LiteralExpressionSyntax sizeLiteral &&
+			sizeLiteral.Token.ValueText == "0" &&
+			arrayCreation.Initializer == null)
+			return true;
+
+		if (expression is ImplicitArrayCreationExpressionSyntax implicitArrayCreation && implicitArrayCreation.Initializer.Expressions.Count == 0)
+			return true;
+
+		return false;
+	}
 
 	private void RegisterAutoLightSelectMigration(MethodDeclarationSyntax node)
 	{
