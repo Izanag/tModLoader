@@ -517,6 +517,13 @@ public class HookRewriter : BaseRewriter
 		if (!SelectRefactor(sym, out var refactor) || !refactor.removed || node.Body == null)
 			return;
 
+		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer") &&
+			sym.Name is "ModifyHitPvp" or "OnHitPvp" or "ModifyHitPvpWithProj" or "OnHitPvpWithProj") {
+			if (!node.Body.Statements.Any())
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
 		if (sym.Name == "SetMapBackgroundImage" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer")) {
 			if (ReturnsLiteralNull(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);

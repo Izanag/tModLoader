@@ -60,8 +60,7 @@ public class ModPlayerTest : ModPlayer
 	}
 
 	public override void ModifyHurt(ref Player.HurtModifiers modifiers)/* tModPorter Override ImmuneTo, FreeDodge or ConsumableDodge instead to prevent taking damage */
-	{
-	}
+{}
 	public override void OnHurt(Player.HurtInfo info) { }
 	public override void PostHurt(Player.HurtInfo info) { }
 
@@ -75,12 +74,6 @@ public class ModPlayerTest : ModPlayer
 	public override void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damage)/* tModPorter If you don't need the Item, consider using OnHitNPC instead */ { }
 	public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)/* tModPorter If you don't need the Projectile, consider using ModifyHitNPC instead */ { }
 	public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damage)/* tModPorter If you don't need the Projectile, consider using OnHitNPC instead */ { }
-#if COMPILE_ERROR
-	public override void ModifyHitPvp(Item item, Player target, ref int damage, ref bool crit)/* tModPorter Note: Removed. Use ModifyHurt on the receiving player and check modifiers.PvP. Use modifiers.DamageSource.SourcePlayerIndex to get the attacking player */ { }
-	public override void OnHitPvp(Item item, Player target, int damage, bool crit)/* tModPorter Note: Removed. Use OnHurt on the receiving player and check info.PvP. Use info.DamageSource.SourcePlayerIndex to get the attacking player */ { }
-	public override void ModifyHitPvpWithProj(Projectile proj, Player target, ref int damage, ref bool crit)/* tModPorter Note: Removed. Use ModifyHurt on the receiving player and check modifiers.PvP. Use modifiers.DamageSource.SourcePlayerIndex to get the attacking player */ { }
-	public override void OnHitPvpWithProj(Projectile proj, Player target, int damage, bool crit)/* tModPorter Note: Removed. Use OnHurt on the receiving player and check info.PvP. Use info.DamageSource.SourcePlayerIndex to get the attacking player */ { }
-#endif
 
 	public override bool FreeDodge(Player.HurtInfo info) => false;
 	public override bool ConsumableDodge(Player.HurtInfo info) => false;
