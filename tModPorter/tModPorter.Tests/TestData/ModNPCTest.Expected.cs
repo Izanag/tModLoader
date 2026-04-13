@@ -68,11 +68,7 @@ public class ModNPCTest : ModNPC
 	public override void OnHitByItem(Player player, Item item, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitByProjectile(Projectile projectile, ref NPC.HitModifiers modifiers) { }
 	public override void OnHitByProjectile(Projectile projectile, NPC.HitInfo hit, int damage) { }
-	public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers) {
-#if COMPILE_ERROR
-		return false;
-#endif
-	}
+	public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers) {}
 	public void HitMemberRename(NPC npc) {
 		var hit = npc.CalculateHitInfo(0, 0);
 		hit.Knockback = 2;

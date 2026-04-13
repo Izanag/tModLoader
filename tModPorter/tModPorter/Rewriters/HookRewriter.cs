@@ -81,6 +81,7 @@ public class HookRewriter : BaseRewriter
 		RegisterSaveDataBodyRewrites(sym, node);
 		RegisterAddStartingItemsBodyRewrites(sym, node);
 		RegisterModifyHurtBodyRewrites(sym, node);
+		RegisterModifyIncomingHitBodyRewrites(sym, node);
 		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
 		RegisterSetNpcNameListBodyRewrites(sym, node);
 		RegisterCanHitNpcBodyRewrites(sym, node);
@@ -589,6 +590,28 @@ public class HookRewriter : BaseRewriter
 		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.FalseLiteralExpression }];
 
 	private static MethodDeclarationSyntax CreateEmptyModifyHurtMethod(MethodDeclarationSyntax node)
+	{
+		var trailingTrivia = node.Body?.CloseBraceToken.TrailingTrivia ?? node.SemicolonToken.TrailingTrivia;
+		var body = Block().WithCloseBraceToken(Token(TriviaList(), SyntaxKind.CloseBraceToken, trailingTrivia));
+		return node.WithBody(body).WithExpressionBody(null).WithSemicolonToken(default);
+	}
+
+	private void RegisterModifyIncomingHitBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (sym.Name != "ModifyIncomingHit")
+			return;
+
+		if (!(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModNPC") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalNPC")))
+			return;
+
+		if (!ReturnsLiteralFalse(node))
+			return;
+
+		RegisterAction<MethodDeclarationSyntax>(node, CreateEmptyModifyIncomingHitMethod);
+	}
+
+	private static MethodDeclarationSyntax CreateEmptyModifyIncomingHitMethod(MethodDeclarationSyntax node)
 	{
 		var trailingTrivia = node.Body?.CloseBraceToken.TrailingTrivia ?? node.SemicolonToken.TrailingTrivia;
 		var body = Block().WithCloseBraceToken(Token(TriviaList(), SyntaxKind.CloseBraceToken, trailingTrivia));
