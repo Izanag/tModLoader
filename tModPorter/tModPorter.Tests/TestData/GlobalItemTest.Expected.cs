@@ -33,20 +33,6 @@ public class GlobalItemTest : GlobalItem
 
 	public override void OnCreated(Item item, ItemCreationContext context) { }
 
-#if COMPILE_ERROR
-	public override bool DrawHead(int head)/* tModPorter Note: Removed. In SetStaticDefaults, use ArmorIDs.Head.Sets.DrawHead[head] = false if you returned false */ { return true; /* Empty */ }
-
-	public override bool DrawBody(int body)/* tModPorter Note: Removed. In SetStaticDefaults, use ArmorIDs.Body.Sets.HidesTopSkin[body] = true if you returned false */ { return true; /* Empty */ }
-
-	public override bool DrawLegs(int legs, int shoes)/* tModPorter Note: Removed. In SetStaticDefaults, use ArmorIDs.Legs.Sets.HidesBottomSkin[legs] = true, and ArmorIDs.Shoe.Sets.OverridesLegs[shoes] = true */ { return true; /* Empty */ }
-
-	public override void DrawHands(int body, ref bool drawHands, ref bool drawArms)/* tModPorter Note: Removed. In SetStaticDefaults, use ArmorIDs.Body.Sets.HidesHands[body] = false if you had drawHands set to true. If you had drawArms set to true, you don't need to do anything */ { /* Empty */ }
-
-	public override void DrawHair(int head, ref bool drawHair, ref bool drawAltHair)/* tModPorter Note: Removed. In SetStaticDefaults, use ArmorIDs.Head.Sets.DrawFullHair[head] = true if you had drawHair set to true, and ArmorIDs.Head.Sets.DrawHatHair[head] = true if you had drawAltHair set to true */ { /* Empty */ }
-
-	public override bool? CanBurnInLava(Item item)/* tModPorter Note: Removed. Use ItemID.Sets.IsLavaImmuneRegardlessOfRarity or add a method hook to On_Item.CheckLavaDeath */ => null;
-#endif
-
 	public override void LoadData(Item item, TagCompound tag) { /* Empty */ }
 
 	public override void SaveData(Item item, TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */ {}

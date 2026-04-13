@@ -514,12 +514,36 @@ public class HookRewriter : BaseRewriter
 
 	private void RegisterRemovedHookBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
 	{
-		if (!SelectRefactor(sym, out var refactor) || !refactor.removed || node.Body == null)
+		if (!SelectRefactor(sym, out var refactor) || !refactor.removed)
 			return;
+
+		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem")) &&
+			sym.Name is "DrawHead" or "DrawBody" or "DrawLegs") {
+			if (ReturnsLiteralTrue(node))
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
+		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem")) &&
+			sym.Name is "DrawHands" or "DrawHair") {
+			if (!node.Body.Statements.Any())
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
+		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem")) &&
+			sym.Name == "CanBurnInLava") {
+			if (ReturnsLiteralNull(node))
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
 
 		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer") &&
 			sym.Name is "ModifyHitPvp" or "OnHitPvp" or "ModifyHitPvpWithProj" or "OnHitPvpWithProj") {
-			if (!node.Body.Statements.Any())
+			if (node.Body != null && !node.Body.Statements.Any())
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 			return;
 		}
