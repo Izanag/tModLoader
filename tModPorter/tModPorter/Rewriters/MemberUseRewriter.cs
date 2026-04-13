@@ -247,6 +247,24 @@ public class MemberUseRewriter : BaseRewriter {
 			return memberName;
 		}
 
+		var variableDeclarator = memberName.FirstAncestorOrSelf<VariableDeclaratorSyntax>();
+		if (variableDeclarator?.Parent is VariableDeclarationSyntax variableDeclaration &&
+			variableDeclarator.Initializer?.Value != null &&
+			variableDeclarator.Initializer.Value.Span.Contains(memberName.Span) &&
+			variableDeclaration.Parent is LocalDeclarationStatementSyntax localDeclaration) {
+			if (variableDeclaration.Type.IsVar) {
+				rw.RegisterAction<LocalDeclarationStatementSyntax>(localDeclaration, n =>
+					EmptyStatement().WithTriviaFrom(n).WithBlockComment(fullComment)
+				);
+				return memberName;
+			}
+
+			rw.RegisterAction<EqualsValueClauseSyntax>(variableDeclarator.Initializer, n =>
+				n.WithValue(DefaultExpression(variableDeclaration.Type.WithoutTrivia()).WithTriviaFrom(n.Value).WithBlockComment(fullComment))
+			);
+			return memberName;
+		}
+
 		var rootExpression = GetContainingExpression(memberName);
 		rw.RegisterAction<ExpressionSyntax>(rootExpression, n => RemovedExpression(rw, op, n, fullComment));
 		return memberName;

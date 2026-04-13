@@ -28,8 +28,6 @@ public class ModPlayerTest : ModPlayer
 	public override void SaveData(TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */ {}
 
 	public override IEnumerable<Item> AddStartingItems(bool mediumcoreDeath)/* tModPorter Suggestion: Return an Item array to add to the players starting items. Use ModifyStartingInventory for modifying them if needed */ {return [new Item(9)];}
-#if COMPILE_ERROR
-#endif
 
 	public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright) { /* Empty */ }
 

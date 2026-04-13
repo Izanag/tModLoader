@@ -167,8 +167,6 @@ public class SimpleRenamedVanillaMembersTest
 		npc.damage = npc.GetAttackDamage_ScaledByDifficulty(80f); // int cast matches return type
 		// instead-expect
 		npc.damage = (int)(80f * GameDifficultyData.EnemyDamageMultiplier.Sample(Main.Difficulty)); // int cast matches return type
-#if COMPILE_ERROR
-#endif
 		;/* tModPorter Note: Removed. No longer necessary when setting life <= 0 and was never necessary when setting active = false. */
 
 		// not-yet-implemented

@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
+using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -26,11 +27,21 @@ public abstract class BaseRewriter : CSharpSyntaxRewriter
 		model = await doc.GetSemanticModelAsync() ?? throw new Exception("No semantic model: " + doc.FilePath);
 		var root = await doc.GetSyntaxRootAsync() ?? throw new Exception("No syntax root: " + doc.FilePath);
 		var newRoot = Visit(root);
-		if (ReferenceEquals(newRoot, root) || newRoot.ToFullString() == root.ToFullString())
+		var oldText = root.ToFullString();
+		var newText = RemoveEmptyCompileErrorBlocks(newRoot.ToFullString());
+		if (ReferenceEquals(newRoot, root) || newText == oldText)
 			return doc;
 
-		return doc.WithSyntaxRoot(newRoot);
+		if (newText == newRoot.ToFullString())
+			return doc.WithSyntaxRoot(newRoot);
+
+		return doc.WithText(SourceText.From(newText));
 	}
+
+	private static string RemoveEmptyCompileErrorBlocks(string text) =>
+		text
+			.Replace("#if COMPILE_ERROR\r\n#endif\r\n", string.Empty)
+			.Replace("#if COMPILE_ERROR\n#endif\n", string.Empty);
 
 	[return: NotNullIfNotNull("node")]
 	public override SyntaxNode Visit(SyntaxNode node) {
