@@ -149,6 +149,10 @@ public class HookRewriter : BaseRewriter
 		node.ExpressionBody?.Expression.IsKind(SyntaxKind.TrueLiteralExpression) == true ||
 		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.TrueLiteralExpression }];
 
+	private static bool ReturnsLiteralNull(MethodDeclarationSyntax node) =>
+		node.ExpressionBody?.Expression.IsKind(SyntaxKind.NullLiteralExpression) == true ||
+		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.NullLiteralExpression }];
+
 	private static MethodDeclarationSyntax InsertSingleGrappleHookAssignment(MethodDeclarationSyntax method, StatementSyntax assignmentStatement)
 	{
 		bool HasAssignment(StatementSyntax statement) => statement.ToString().Replace(" ", "") == assignmentStatement.ToString().Replace(" ", "");
@@ -489,6 +493,12 @@ public class HookRewriter : BaseRewriter
 	{
 		if (!SelectRefactor(sym, out var refactor) || !refactor.removed || node.Body == null)
 			return;
+
+		if (sym.Name == "SetMapBackgroundImage" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer")) {
+			if (ReturnsLiteralNull(node))
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
 
 		if (sym.Name != "DrawBehind" || !(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile") || sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalProjectile")))
 			return;

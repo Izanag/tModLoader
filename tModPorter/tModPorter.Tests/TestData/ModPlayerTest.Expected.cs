@@ -29,10 +29,6 @@ public class ModPlayerTest : ModPlayer
 
 	public override IEnumerable<Item> AddStartingItems(bool mediumcoreDeath)/* tModPorter Suggestion: Return an Item array to add to the players starting items. Use ModifyStartingInventory for modifying them if needed */ {return [new Item(9)];}
 #if COMPILE_ERROR
-
-	public override Texture2D SetMapBackgroundImage()/* tModPorter Note: Removed. Create a ModBiome (or ModSceneEffect) class and override MapBackground property to return this object through Mod/ModContent.Find, then move this code into IsBiomeActive (or IsSceneEffectActive) */ {
-		return null
-	}
 #endif
 
 	public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright) { /* Empty */ }
