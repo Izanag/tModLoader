@@ -36,16 +36,10 @@ public class ModProjectileTest : ModProjectile
 
 #if COMPILE_ERROR
 	public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)/* tModPorter Note: Removed. Set Projectile.drawLayer instead */ {
-		// not-yet-implemented
-		behindNPCsAndTiles.Add(index);
-		behindNPCs.Add(index);
-		behindProjectiles.Add(index);
-		overWiresUI.Add(index);
-		// instead-expect
-		drawCacheProjsBehindNPCsAndTiles.Add(index);
-		drawCacheProjsBehindNPCs.Add(index);
-		drawCacheProjsBehindProjectiles.Add(index);
-		drawCacheProjsOverWiresUI.Add(index);
+		Projectile.drawLayer=ProjectileDrawLayerID.BehindNPCsAndTiles;
+		Projectile.drawLayer=ProjectileDrawLayerID.BehindNPCs;
+		Projectile.drawLayer=ProjectileDrawLayerID.BehindProjectiles;
+		Projectile.drawLayer=ProjectileDrawLayerID.OverWiresUI;
 	}
 #endif
 
@@ -57,7 +51,7 @@ public class ModProjectileTest : ModProjectile
 	public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
 #endif
 	public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
-	public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) { }
+	public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers) { }
 	public override void OnHitPlayer(Player target, Player.HurtInfo info) { }
 

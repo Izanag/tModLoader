@@ -73,6 +73,7 @@ public class HookRewriter : BaseRewriter
 		var sym = model.GetDeclaredSymbol(node);
 		RegisterParameterRenames(sym, node);
 		RegisterBaseMethodInvocationRewrites(sym, node);
+		RegisterRemovedHookBodyRewrites(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
 		if (!SelectRefactor(sym, out var refactor))
 			return node;
@@ -81,6 +82,45 @@ public class HookRewriter : BaseRewriter
 			node = node.WithParameterList(node.ParameterList.WithBlockComment(refactor.comment));
 
 		return node;
+	}
+
+	private void RegisterRemovedHookBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (!SelectRefactor(sym, out var refactor) || !refactor.removed || node.Body == null)
+			return;
+
+		if (sym.Name != "DrawBehind" || !(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile") || sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalProjectile")))
+			return;
+
+		var drawLayerTarget = sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalProjectile")
+			? IdentifierName("projectile")
+			: IdentifierName("Projectile");
+
+		foreach (var invoke in node.Body.DescendantNodes().OfType<InvocationExpressionSyntax>()) {
+			if (invoke.Expression is not MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax listName, Name.Identifier.Text: "Add" } ||
+				invoke.ArgumentList.Arguments.Count != 1)
+				continue;
+
+			string layerName = listName.Identifier.Text switch {
+				"drawCacheProjsBehindNPCsAndTiles" or "behindNPCsAndTiles" => "BehindNPCsAndTiles",
+				"drawCacheProjsBehindNPCs" or "behindNPCs" => "BehindNPCs",
+				"drawCacheProjsBehindProjectiles" or "behindProjectiles" => "BehindProjectiles",
+				"drawCacheProjsOverPlayers" or "overPlayers" => "OverPlayers",
+				"drawCacheProjsOverWiresUI" or "overWiresUI" => "OverWiresUI",
+				_ => null,
+			};
+
+			if (layerName == null)
+				continue;
+
+			var replacement = AssignmentExpression(
+				SyntaxKind.SimpleAssignmentExpression,
+				MemberAccessExpression(drawLayerTarget.WithoutTrivia(), "drawLayer"),
+				MemberAccessExpression(UseType("Terraria.ID.ProjectileDrawLayerID"), layerName)
+			).WithTriviaFrom(invoke);
+
+			RegisterAction<InvocationExpressionSyntax>(invoke, _ => replacement);
+		}
 	}
 
 	private void RegisterParameterRenames(IMethodSymbol sym, MethodDeclarationSyntax node) {

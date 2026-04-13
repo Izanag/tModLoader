@@ -1,12 +1,14 @@
+using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 public class GlobalProjectileTest : GlobalProjectile
 {
-	public override bool? CanDamage(Projectile projectile)/* tModPorter Suggestion: Return null instead of true */ { return false; }
+	public override Nullable<bool> CanDamage(Projectile projectile)/* tModPorter Suggestion: Return null instead of true */ { return false; }
 
 	public override bool TileCollideStyle(Projectile projectile, ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac) => true;
 
@@ -18,16 +20,10 @@ public class GlobalProjectileTest : GlobalProjectile
 
 #if COMPILE_ERROR
 	public override void DrawBehind(Projectile projectile, int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)/* tModPorter Note: Removed. Set Projectile.drawLayer instead */ {
-		// not-yet-implemented
-		behindNPCsAndTiles.Add(index);
-		behindNPCs.Add(index);
-		behindProjectiles.Add(index);
-		overWiresUI.Add(index);
-		// instead-expect
-		drawCacheProjsBehindNPCsAndTiles.Add(index);
-		drawCacheProjsBehindNPCs.Add(index);
-		drawCacheProjsBehindProjectiles.Add(index);
-		drawCacheProjsOverWiresUI.Add(index);
+		projectile.drawLayer=ProjectileDrawLayerID.BehindNPCsAndTiles;
+		projectile.drawLayer=ProjectileDrawLayerID.BehindNPCs;
+		projectile.drawLayer=ProjectileDrawLayerID.BehindProjectiles;
+		projectile.drawLayer=ProjectileDrawLayerID.OverWiresUI;
 	}
 #endif
 
@@ -39,7 +35,7 @@ public class GlobalProjectileTest : GlobalProjectile
 	public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers) { }
 #endif
 	public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers) { }
-	public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone) { }
+	public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers) { }
 	public override void OnHitPlayer(Projectile projectile, Player target, Player.HurtInfo info) { }
 
