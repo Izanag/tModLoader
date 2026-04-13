@@ -87,10 +87,7 @@ public class ModItemTest : ModItem
 
 	public override void LoadData(TagCompound tag) { /* Empty */ }
 
-#if COMPILE_ERROR
-	public override void SaveData(TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */ => new TagCompound();
-#endif
-
+	public override void SaveData(TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */ {}
 	public override void ExtractinatorUse(int extractinatorBlockType, ref int resultType, ref int resultStack) { /* Empty */ }
 
 	public override void ModifyHitNPC(Player player, NPC target, ref NPC.HitModifiers modifiers) { }

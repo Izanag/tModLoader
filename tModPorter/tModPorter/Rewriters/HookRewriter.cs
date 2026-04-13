@@ -77,6 +77,7 @@ public class HookRewriter : BaseRewriter
 		RegisterCatchFishBodyRewrites(sym, node);
 		RegisterShootBodyRewrites(sym, node);
 		RegisterUseItemBodyRewrites(sym, node);
+		RegisterSaveDataBodyRewrites(sym, node);
 		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
 		RegisterSetNpcNameListBodyRewrites(sym, node);
 		RegisterCanHitNpcBodyRewrites(sym, node);
@@ -307,6 +308,46 @@ public class HookRewriter : BaseRewriter
 			RegisterAction<ArrowExpressionClauseSyntax>(node.ExpressionBody, n =>
 				n.WithExpression(LiteralExpression(SyntaxKind.NullLiteralExpression).WithTriviaFrom(n.Expression)));
 		}
+	}
+
+	private void RegisterSaveDataBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (sym.Name != "SaveData")
+			return;
+
+		if (!(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModTileEntity")))
+			return;
+
+		if (node.Body?.Statements is [ReturnStatementSyntax { Expression: { } expression }] &&
+			IsEmptyTagCompoundCreation(expression)) {
+			RegisterAction<MethodDeclarationSyntax>(node, CreateEmptySaveDataMethod);
+			return;
+		}
+
+		if (node.ExpressionBody?.Expression is { } arrowExpression && IsEmptyTagCompoundCreation(arrowExpression)) {
+			RegisterAction<MethodDeclarationSyntax>(node, CreateEmptySaveDataMethod);
+		}
+	}
+
+	private bool IsEmptyTagCompoundCreation(ExpressionSyntax expression)
+	{
+		if (expression is not ObjectCreationExpressionSyntax objectCreation)
+			return false;
+
+		if (objectCreation.Initializer?.Expressions.Count > 0)
+			return false;
+
+		return model.GetTypeInfo(objectCreation).Type?.InheritsFrom("Terraria.ModLoader.IO.TagCompound") == true;
+	}
+
+	private static MethodDeclarationSyntax CreateEmptySaveDataMethod(MethodDeclarationSyntax node)
+	{
+		var trailingTrivia = node.Body?.CloseBraceToken.TrailingTrivia ?? node.SemicolonToken.TrailingTrivia;
+		var body = Block().WithCloseBraceToken(Token(TriviaList(), SyntaxKind.CloseBraceToken, trailingTrivia));
+		return node.WithBody(body).WithExpressionBody(null).WithSemicolonToken(default);
 	}
 
 	private void RegisterNpcDrawScreenPosBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)

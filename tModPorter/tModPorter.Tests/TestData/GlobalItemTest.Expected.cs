@@ -49,9 +49,7 @@ public class GlobalItemTest : GlobalItem
 
 	public override void LoadData(Item item, TagCompound tag) { /* Empty */ }
 
-#if COMPILE_ERROR
-	public override void SaveData(Item item, TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */ => new TagCompound();
-#endif
+	public override void SaveData(Item item, TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */ {}
 
 	public override void ExtractinatorUse(int extractType, int extractinatorBlockType, ref int resultType, ref int resultStack) { /* Empty */ }
 
