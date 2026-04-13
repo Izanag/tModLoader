@@ -75,6 +75,7 @@ public class HookRewriter : BaseRewriter
 		RegisterBaseMethodInvocationRewrites(sym, node);
 		RegisterModifyWeaponDamageBodyRewrites(sym, node);
 		RegisterCatchFishBodyRewrites(sym, node);
+		RegisterShootBodyRewrites(sym, node);
 		RegisterRemovedHookBodyRewrites(sym, node);
 		RegisterRemovedHookStaticDefaultsMigrations(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
@@ -235,6 +236,44 @@ public class HookRewriter : BaseRewriter
 		foreach (var identifier in node.Body.DescendantNodes().OfType<IdentifierNameSyntax>()) {
 			if (model.GetSymbolInfo(identifier).Symbol is not IParameterSymbol parameter ||
 				!replacements.TryGetValue(parameter, out var replacement))
+				continue;
+
+			RegisterAction<IdentifierNameSyntax>(identifier, n => replacement.WithTriviaFrom(n));
+		}
+	}
+
+	private void RegisterShootBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (node.Body == null || sym.Name != "Shoot")
+			return;
+
+		if (!(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer")))
+			return;
+
+		var parameterMap = sym.Parameters.ToDictionary(parameter => parameter.Name, parameter => parameter, StringComparer.Ordinal);
+		var replacements = new Dictionary<IParameterSymbol, ExpressionSyntax>(SymbolEqualityComparer.Default);
+
+		void Map(string parameterName, ExpressionSyntax replacement)
+		{
+			if (parameterMap.TryGetValue(parameterName, out var parameter))
+				replacements[parameter] = replacement;
+		}
+
+		Map("speedX", MemberAccessExpression(IdentifierName("velocity"), "X"));
+		Map("speedY", MemberAccessExpression(IdentifierName("velocity"), "Y"));
+		Map("knockBack", IdentifierName("knockback"));
+
+		if (replacements.Count == 0)
+			return;
+
+		foreach (var identifier in node.Body.DescendantNodes().OfType<IdentifierNameSyntax>()) {
+			if (model.GetSymbolInfo(identifier).Symbol is not IParameterSymbol parameter ||
+				!replacements.TryGetValue(parameter, out var replacement))
+				continue;
+
+			if (identifier.Parent is ArgumentSyntax { RefKindKeyword.RawKind: not 0 } argument && argument.Expression == identifier)
 				continue;
 
 			RegisterAction<IdentifierNameSyntax>(identifier, n => replacement.WithTriviaFrom(n));

@@ -6,16 +6,9 @@ using Microsoft.Xna.Framework;
 public class ShootModItemTest : ModItem
 {
 	public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) {
-		// not-yet-implemented
 		float speedXLocal = velocity.X;
 		float speedYLocal = velocity.Y;
 		float knockBackLocal = knockback;
-		// instead-expect
-#if COMPILE_ERROR
-		float speedXLocal = speedX;
-		float speedYLocal = speedY;
-		float knockBackLocal = knockBack;
-#endif
 
 #if COMPILE_ERROR
 		// not-yet-implemented
