@@ -61,9 +61,6 @@ public class ModPlayerTest : ModPlayer
 
 	public override void ModifyHurt(ref Player.HurtModifiers modifiers)/* tModPorter Override ImmuneTo, FreeDodge or ConsumableDodge instead to prevent taking damage */
 	{
-#if COMPILE_ERROR
-		return false;
-#endif
 	}
 	public override void OnHurt(Player.HurtInfo info) { }
 	public override void PostHurt(Player.HurtInfo info) { }

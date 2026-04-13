@@ -79,6 +79,7 @@ public class HookRewriter : BaseRewriter
 		RegisterUseItemBodyRewrites(sym, node);
 		RegisterSaveDataBodyRewrites(sym, node);
 		RegisterAddStartingItemsBodyRewrites(sym, node);
+		RegisterModifyHurtBodyRewrites(sym, node);
 		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
 		RegisterSetNpcNameListBodyRewrites(sym, node);
 		RegisterCanHitNpcBodyRewrites(sym, node);
@@ -423,6 +424,28 @@ public class HookRewriter : BaseRewriter
 		var returnStatement = (ReturnStatementSyntax)ParseStatement($"return [{string.Join(", ", itemExpressions)}];");
 		newBody = Block(returnStatement).WithCloseBraceToken(Token(TriviaList(), SyntaxKind.CloseBraceToken, trailingTrivia));
 		return true;
+	}
+
+	private void RegisterModifyHurtBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (sym.Name != "ModifyHurt" || !sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer"))
+			return;
+
+		if (!ReturnsLiteralFalse(node))
+			return;
+
+		RegisterAction<MethodDeclarationSyntax>(node, CreateEmptyModifyHurtMethod);
+	}
+
+	private static bool ReturnsLiteralFalse(MethodDeclarationSyntax node) =>
+		node.ExpressionBody?.Expression.IsKind(SyntaxKind.FalseLiteralExpression) == true ||
+		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.FalseLiteralExpression }];
+
+	private static MethodDeclarationSyntax CreateEmptyModifyHurtMethod(MethodDeclarationSyntax node)
+	{
+		var trailingTrivia = node.Body?.CloseBraceToken.TrailingTrivia ?? node.SemicolonToken.TrailingTrivia;
+		var body = Block().WithCloseBraceToken(Token(TriviaList(), SyntaxKind.CloseBraceToken, trailingTrivia));
+		return node.WithBody(body).WithExpressionBody(null).WithSemicolonToken(default);
 	}
 
 	private void RegisterNpcDrawScreenPosBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
