@@ -149,6 +149,24 @@ public class MemberUseRewriter : BaseRewriter {
 		return memberName;
 	};
 
+	public static RewriteMemberUse NpcDebuffImmunitySets() => (rw, op, memberName) => {
+		if (memberName.FirstAncestorOrSelf<ExpressionStatementSyntax>() is not ExpressionStatementSyntax expressionStatement ||
+			expressionStatement.Expression is not InvocationExpressionSyntax invocation ||
+			invocation.Expression is not MemberAccessExpressionSyntax { Name.Identifier.Text: "Add" } ||
+			invocation.ArgumentList.Arguments.Count != 2)
+			return memberName.WithBlockComment("Removed: See the porting notes in https://github.com/tModLoader/tModLoader/pull/3453");
+
+		if (!TryGetSpecificDebuffImmunityAssignments(invocation, out var assignments))
+			return memberName.WithBlockComment("Removed: See the porting notes in https://github.com/tModLoader/tModLoader/pull/3453");
+
+		StatementSyntax replacement = assignments.Count == 1
+			? assignments[0]
+			: Block(assignments);
+
+		rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n => replacement.WithTriviaFrom(n));
+		return memberName;
+	};
+
 	public static RewriteMemberUse ReplaceContainingMemberAccess(System.Func<ExpressionSyntax, ExpressionSyntax> replacementFactory) => (rw, op, memberName) => {
 		if (memberName.Parent is not MemberAccessExpressionSyntax access)
 			return memberName;
@@ -307,5 +325,46 @@ public class MemberUseRewriter : BaseRewriter {
 			}
 		}
 		return memberName;
+	}
+
+	private static bool TryGetSpecificDebuffImmunityAssignments(InvocationExpressionSyntax invocation, out List<StatementSyntax> assignments)
+	{
+		assignments = null;
+		var npcIndexExpr = invocation.ArgumentList.Arguments[0].Expression;
+		var configExpr = invocation.ArgumentList.Arguments[1].Expression;
+		if (configExpr is not ObjectCreationExpressionSyntax { Initializer.Expressions: var initializerExpressions })
+			return false;
+
+		var specificallyImmuneToAssignment = initializerExpressions
+			.OfType<AssignmentExpressionSyntax>()
+			.FirstOrDefault(a => a.Left is IdentifierNameSyntax { Identifier.Text: "SpecificallyImmuneTo" });
+		if (specificallyImmuneToAssignment == null)
+			return false;
+
+		if (!TryGetArrayElements(specificallyImmuneToAssignment.Right, out var buffExpressions) || buffExpressions.Count == 0)
+			return false;
+
+		assignments = buffExpressions
+			.Select(buffExpr => (StatementSyntax)ParseStatement($"NPCID.Sets.SpecificDebuffImmunity[{npcIndexExpr}][{buffExpr}] = true;"))
+			.ToList();
+		return true;
+	}
+
+	private static bool TryGetArrayElements(ExpressionSyntax expression, out List<ExpressionSyntax> elements)
+	{
+		elements = null;
+		switch (expression) {
+			case ArrayCreationExpressionSyntax { Initializer.Expressions: var explicitElements }:
+				elements = explicitElements.ToList();
+				return true;
+			case ImplicitArrayCreationExpressionSyntax { Initializer.Expressions: var implicitElements }:
+				elements = implicitElements.ToList();
+				return true;
+			case InitializerExpressionSyntax { Expressions: var initializerElements }:
+				elements = initializerElements.ToList();
+				return true;
+			default:
+				return false;
+		}
 	}
 }

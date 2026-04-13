@@ -551,7 +551,7 @@ public static partial class Config
 		RenameInstanceField("Terraria.Projectile", from: "ContinuouslyUpdateDamage", to: "ContinuouslyUpdateDamageStats");
 		RenameStaticField("Terraria.ID.BuffID.Sets", from: "IsAnNPCWhipDebuff", to: "IsATagBuff");
 		RenameStaticField("Terraria.ID.NPCID.Sets", from: "ShimmerImmunity", to: "SpecificDebuffImmunity").FollowBy(AccessShimmerBuffIDElem());
-		RefactorStaticMember("Terraria.ID.NPCID.Sets", "DebuffImmunitySets", Comment("Removed: See the porting notes in https://github.com/tModLoader/tModLoader/pull/3453"));
+		RefactorStaticMember("Terraria.ID.NPCID.Sets", "DebuffImmunitySets", NpcDebuffImmunitySets());
 		RenameMethod("Terraria.ModLoader.ProjectileLoader", from: "Kill", to: "OnKill");
 		RenameMethod("Terraria.ModLoader.ModProjectile", from: "Kill", to: "OnKill");
 		RenameMethod("Terraria.ModLoader.GlobalProjectile", from: "Kill", to: "OnKill");

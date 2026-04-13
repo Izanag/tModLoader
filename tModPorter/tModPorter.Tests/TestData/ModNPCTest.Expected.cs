@@ -75,13 +75,7 @@ public class ModNPCTest : ModNPC
 	}
 
 	public override void SetStaticDefaults() {
-#if COMPILE_ERROR
-		NPCID.Sets.DebuffImmunitySets/* tModPorter Removed: See the porting notes in https://github.com/tModLoader/tModLoader/pull/3453 */.Add(Type, new NPCDebuffImmunityData {
-			SpecificallyImmuneTo = new int[] {
-				BuffID.Poisoned
-			}
-		});
-#endif
+		NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Poisoned] = true;
 
 		NPCID.Sets.SpecificDebuffImmunity[Type][BuffID.Shimmer] = true;
 
