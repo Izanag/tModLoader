@@ -76,6 +76,7 @@ public class HookRewriter : BaseRewriter
 		RegisterModifyWeaponDamageBodyRewrites(sym, node);
 		RegisterCatchFishBodyRewrites(sym, node);
 		RegisterShootBodyRewrites(sym, node);
+		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
 		RegisterRemovedHookBodyRewrites(sym, node);
 		RegisterRemovedHookStaticDefaultsMigrations(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
@@ -277,6 +278,24 @@ public class HookRewriter : BaseRewriter
 				continue;
 
 			RegisterAction<IdentifierNameSyntax>(identifier, n => replacement.WithTriviaFrom(n));
+		}
+	}
+
+	private void RegisterNpcDrawScreenPosBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (node.Body == null || (sym.Name != "PreDraw" && sym.Name != "PostDraw"))
+			return;
+
+		if (!(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModNPC") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalNPC")))
+			return;
+
+		foreach (var memberAccess in node.Body.DescendantNodes().OfType<MemberAccessExpressionSyntax>()) {
+			if (memberAccess.Expression is not IdentifierNameSyntax { Identifier.Text: "Main" } ||
+				memberAccess.Name.Identifier.Text != "screenPosition")
+				continue;
+
+			RegisterAction<MemberAccessExpressionSyntax>(memberAccess, n => IdentifierName("screenPos").WithTriviaFrom(n));
 		}
 	}
 
@@ -484,18 +503,32 @@ public class HookRewriter : BaseRewriter
 			return false;
 
 		var origNode = node;
-		if (!ParametersEqual(sym, baseSym)) {
+		SelectRefactor(sym, out var refactor);
+		bool hasParameterRenames = refactor?.parameterRenames?.Count > 0;
+		if (!ParametersEqual(sym, baseSym) || hasParameterRenames) {
 			var matchedParameters = MatchParameters(sym.Parameters.ToArray(), baseSym.Parameters.ToArray());
 			var matchedNewParameters = matchedParameters.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
 			var rewrittenParameters = new List<ParameterSyntax>(baseSym.Parameters.Length);
+			var usedParameterNames = new HashSet<string>(StringComparer.Ordinal);
 
 			for (int i = 0; i < baseSym.Parameters.Length; i++) {
 				var rewrittenParameter = Parameter(baseSym.Parameters[i]);
 				if (matchedNewParameters.TryGetValue(i, out int oldIndex)) {
 					var oldParameter = node.ParameterList.Parameters[oldIndex];
+					var parameterName = oldParameter.Identifier.Text;
+					if (refactor?.parameterRenames != null && refactor.parameterRenames.TryGetValue(parameterName, out var renamedParameter))
+						parameterName = renamedParameter;
+
+					if (usedParameterNames.Contains(parameterName))
+						parameterName = rewrittenParameter.Identifier.Text;
+					usedParameterNames.Add(parameterName);
 					rewrittenParameter = oldParameter
 						.WithType(rewrittenParameter.Type.WithTriviaFrom(oldParameter.Type))
-						.WithModifiers(rewrittenParameter.Modifiers);
+						.WithModifiers(rewrittenParameter.Modifiers)
+						.WithIdentifier(rewrittenParameter.Identifier.WithText(parameterName).WithTriviaFrom(oldParameter.Identifier));
+				}
+				else {
+					usedParameterNames.Add(rewrittenParameter.Identifier.Text);
 				}
 
 				rewrittenParameters.Add(rewrittenParameter);

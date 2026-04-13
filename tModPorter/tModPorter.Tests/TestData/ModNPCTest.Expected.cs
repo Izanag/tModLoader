@@ -29,22 +29,12 @@ public class ModNPCTest : ModNPC
 	public override bool SpecialOnKill() { return true; /* Empty */ }
 
 	public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
-		// not-yet-implemented
 		Vector2 screen = screenPos - Vector2.One * 6f;
-		// instead-expect
-#if COMPILE_ERROR
-		Vector2 screen = Main.screenPosition - Vector2.One * 6f;
-#endif
 		return true;
 	}
 
 	public override void PostDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
-		// not-yet-implemented
 		Vector2 screen = screenPos - Vector2.One * 6f;
-		// instead-expect
-#if COMPILE_ERROR
-		Vector2 screen = Main.screenPosition - Vector2.One * 6f;
-#endif
 	}
 
 	public override bool CanTownNPCSpawn(int numTownNPCs)/* tModPorter Suggestion: Copy the implementation of NPC.SpawnAllowed_Merchant in vanilla if you to count money, and be sure to set a flag when unlocked, so you don't count every tick. */ => false;
@@ -62,7 +52,7 @@ public class ModNPCTest : ModNPC
 	}
 #endif
 
-	public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)/* tModPorter Note: bossLifeScale -> balance (bossAdjustment is different, see the docs for details) */
+	public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossLifeScale)/* tModPorter Note: bossLifeScale -> balance (bossAdjustment is different, see the docs for details) */
 	{
 	}
 
@@ -75,9 +65,9 @@ public class ModNPCTest : ModNPC
 	public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
 	public override void OnHitNPC(NPC target, NPC.HitInfo hit) { }
 	public override void ModifyHitByItem(Player player, Item item, ref NPC.HitModifiers modifiers) { }
-	public override void OnHitByItem(Player player, Item item, NPC.HitInfo hit, int damageDone) { }
+	public override void OnHitByItem(Player player, Item item, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitByProjectile(Projectile projectile, ref NPC.HitModifiers modifiers) { }
-	public override void OnHitByProjectile(Projectile projectile, NPC.HitInfo hit, int damageDone) { }
+	public override void OnHitByProjectile(Projectile projectile, NPC.HitInfo hit, int damage) { }
 	public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers) {
 #if COMPILE_ERROR
 		return false;

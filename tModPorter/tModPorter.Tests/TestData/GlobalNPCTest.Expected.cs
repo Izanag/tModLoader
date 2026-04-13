@@ -13,18 +13,12 @@ public class GlobalNPCTest : GlobalNPC
 	public override bool SpecialOnKill(NPC npc) { return true; /* Empty */ }
 
 	public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
-		// not-yet-implemented
 		spriteBatch.Draw(null, npc.Center - screenPos, drawColor);
-		// instead-expect
-		spriteBatch.Draw(null, npc.Center - Main.screenPosition, drawColor);
 		return true;
 	}
 
 	public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) {
-		// not-yet-implemented
 		spriteBatch.Draw(null, npc.Center - screenPos, drawColor);
-		// instead-expect
-		spriteBatch.Draw(null, npc.Center - Main.screenPosition, drawColor);
 	}
 
 #if COMPILE_ERROR
@@ -33,7 +27,7 @@ public class GlobalNPCTest : GlobalNPC
 	}
 #endif
 
-	public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment)/* tModPorter Note: bossLifeScale -> balance (bossAdjustment is different, see the docs for details) */
+	public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossLifeScale)/* tModPorter Note: bossLifeScale -> balance (bossAdjustment is different, see the docs for details) */
 	{
 	}
 
@@ -45,9 +39,9 @@ public class GlobalNPCTest : GlobalNPC
 	public override void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers) { }
 	public override void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit) { }
 	public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) { }
-	public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone) { }
+	public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) { }
-	public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone) { }
+	public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damage) { }
 	public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers) {
 #if COMPILE_ERROR
 		return false;
