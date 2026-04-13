@@ -18,7 +18,7 @@ public class ModItemTest : ModItem
 		Item.useTime += 2;
 
 #if COMPILE_ERROR
-		Console.WriteLine(Item.IsCandidateForReforge/* tModPorter Note: Removed. Use `maxStack == 1 || Item.AllowReforgeForStackableItem` or `Item.Prefix(-3)` to check whether an item is reforgeable */);
+		Console.WriteLine(Item.maxStack == 1 || Item.AllowReforgeForStackableItem);
 		Item.CloneWithModdedDataFrom(Item)/* tModPorter Note: Removed. Use Clone, ResetPrefix or Refresh */;
 #endif
 
@@ -33,7 +33,9 @@ public class ModItemTest : ModItem
 		Terraria.ID.AmmoID.Sets.IsSpecialist[Type] = true;
 		ItemID.Sets.Torches[Type] = true;
 	}
+
 	protected override bool CloneNewInstances => false;
+
 	public override ModItem Clone(Item newEntity) { return null; }
 
 	public override bool CanReforge()/* tModPorter Note: Use CanReforge instead for logic determining if a reforge can happen. */ { return false; /* comment */ }
