@@ -71,7 +71,7 @@ public abstract class BaseRewriter : CSharpSyntaxRewriter
 		if (specialKind != SyntaxKind.None)
 			return PredefinedType(Token(specialKind));
 
-		if (sym.ContainingNamespace != null)
+		if (sym.ContainingNamespace != null && !sym.ContainingNamespace.IsGlobalNamespace)
 			UsingNamespace(sym.ContainingNamespace);
 
 		return Name(sym);

@@ -440,6 +440,8 @@ public static partial class Config
 
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "position", to: "Position");
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "itemLocation", to: "ItemLocation");
+		RefactorInstanceMember("Terraria.DataStructures.PlayerDrawSet", "drawHands", ReplaceContainingMemberAccessWithNegatedMember("armorHidesHands"));
+		RefactorInstanceMember("Terraria.DataStructures.PlayerDrawSet", "drawArms", ReplaceContainingMemberAccessWithNegatedMember("armorHidesArms"));
 		RefactorInstanceMember("Terraria.DataStructures.PlayerDrawSet", "drawHeldProjInFrontOfHeldItemAndBody", RemoveContainingStatementOrInitializer("No direct PlayerDrawSet equivalent exists. Check projectile.drawLayer instead."));
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "drawHair", to: "fullHair");
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "drawAltHair", to: "hatHair");
@@ -480,6 +482,8 @@ public static partial class Config
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "headOrigin", to: "headVect");
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "bodyOrigin", to: "bodyVect");
 		RenameInstanceField("Terraria.DataStructures.PlayerDrawSet", from: "legOrigin", to: "legVect");
+		RefactorStaticMember("Terraria.Main", "playerDrawDust", ReplaceWithScopedPlayerDrawSetMember("DustCache"));
+		RefactorStaticMember("Terraria.Main", "playerDrawGore", ReplaceWithScopedPlayerDrawSetMember("GoreCache"));
 
 		RenameType(from: "Terraria.ModLoader.ModRecipe", to: "Terraria.Recipe");
 		RenameMethod("Terraria.Recipe", from: "AddRecipe", "Register");

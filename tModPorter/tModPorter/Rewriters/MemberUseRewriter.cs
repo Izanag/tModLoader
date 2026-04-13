@@ -142,12 +142,44 @@ public class MemberUseRewriter : BaseRewriter {
 		return memberName;
 	};
 
+	public static RewriteMemberUse ReplaceContainingMemberAccess(System.Func<ExpressionSyntax, ExpressionSyntax> replacementFactory) => (rw, op, memberName) => {
+		if (memberName.Parent is not MemberAccessExpressionSyntax access)
+			return memberName;
+
+		var rootExpr = GetContainingExpression(access);
+		rw.RegisterAction<ExpressionSyntax>(rootExpr, n => replacementFactory(access.Expression.WithoutTrivia()).WithTriviaFrom(n));
+		return memberName;
+	};
+
+	public static RewriteMemberUse ReplaceContainingMemberAccessWithNegatedMember(string memberName) =>
+		ReplaceContainingMemberAccess(expr =>
+			PrefixUnaryExpression(
+				SyntaxKind.LogicalNotExpression,
+				MemberAccessExpression(expr, memberName)
+			)
+		);
+
+	public static RewriteMemberUse ReplaceWithScopedPlayerDrawSetMember(string memberName) => (rw, op, identifier) => {
+		var drawSetExpr = FindScopedPlayerDrawSetExpression(rw, identifier);
+		if (drawSetExpr == null)
+			return identifier.WithBlockComment($"Suggestion: <PlayerDrawSet>.{memberName}");
+
+		var rootExpr = identifier.Parent is MemberAccessExpressionSyntax access && access.Name == identifier
+			? (ExpressionSyntax)access
+			: GetContainingExpression(identifier);
+		rw.RegisterAction<ExpressionSyntax>(rootExpr, n => MemberAccessExpression(drawSetExpr.WithoutTrivia(), memberName).WithTriviaFrom(n));
+		return identifier;
+	};
+
 	private static ExpressionSyntax GetContainingExpression(ExpressionSyntax expr)
 	{
 		while (true) {
 			switch (expr.Parent) {
 				case MemberAccessExpressionSyntax memberAccess when memberAccess.Expression == expr:
 					expr = memberAccess;
+					continue;
+				case MemberAccessExpressionSyntax memberAccessName when memberAccessName.Name == expr:
+					expr = memberAccessName;
 					continue;
 				case ElementAccessExpressionSyntax elementAccess when elementAccess.Expression == expr:
 					expr = elementAccess;
@@ -164,9 +196,29 @@ public class MemberUseRewriter : BaseRewriter {
 		}
 	}
 
+	private static ExpressionSyntax FindScopedPlayerDrawSetExpression(MemberUseRewriter rw, SyntaxNode node)
+	{
+		var candidates = rw.model.LookupSymbols(node.SpanStart)
+			.Select(symbol => symbol switch {
+				IParameterSymbol parameter when parameter.Type.InheritsFrom("Terraria.DataStructures.PlayerDrawSet") => new { parameter.Name, Priority = 0 },
+				ILocalSymbol local when local.Type.InheritsFrom("Terraria.DataStructures.PlayerDrawSet") => new { local.Name, Priority = 1 },
+				_ => null
+			})
+			.Where(candidate => candidate != null)
+			.OrderBy(candidate => candidate.Priority)
+			.ThenBy(candidate => candidate.Name, System.StringComparer.Ordinal)
+			.FirstOrDefault();
+
+		return candidates == null ? null : IdentifierName(candidates.Name);
+	}
+
 	private static ExpressionSyntax RemovedExpression(MemberUseRewriter rw, IOperation op, ExpressionSyntax expr, string comment)
 	{
-		var type = op.Type ?? rw.model.GetTypeInfo(expr).Type;
+		var typeInfo = rw.model.GetTypeInfo(expr);
+		var type = op.Type;
+		if (type == null || type.TypeKind == TypeKind.Error)
+			type = typeInfo.ConvertedType ?? typeInfo.Type;
+
 		ExpressionSyntax replacement = type != null
 			? DefaultExpression(rw.UseType(type))
 			: LiteralExpression(SyntaxKind.NullLiteralExpression);

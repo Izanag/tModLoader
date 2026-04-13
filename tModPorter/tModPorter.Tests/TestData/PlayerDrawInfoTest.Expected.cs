@@ -10,15 +10,9 @@ public class PlayerDrawInfoTest
 		PlayerDrawSet info = default;
 		Vector2 position = info.Position;
 		Vector2 itemLocation = info.ItemLocation;
-		// not-yet-implemented
 		bool drawHands = !info.armorHidesHands; // Negated, the non-negated version (missingHand) is internal
 		bool drawArms = !info.armorHidesArms; // Negated, the non-negated version (missingArm) is internal
-		// instead-expect
-#if COMPILE_ERROR
-		bool drawHands = info.drawHands; // Negated, the non-negated version (missingHand) is internal
-		bool drawArms = info.drawArms; // Negated, the non-negated version (missingArm) is internal
-#endif		
-		;/* tModPorter Note: Removed. No direct PlayerDrawSet equivalent exists. Check projectile.drawLayer instead. */
+		bool drawHeldProjInFrontOfHeldItemAndBody = default(bool)/* tModPorter Note: Removed. No direct PlayerDrawSet equivalent exists. Check projectile.drawLayer instead. */;
 		bool drawHair = info.fullHair;
 		bool drawAltHair = info.hatHair;
 		//int hairShader = info.hairShader; // Can't be reasonably ported, hairDyePacked has a different representation and needs (un)packing
@@ -62,13 +56,7 @@ public class PlayerDrawInfoTest
 	}
 
 	void ListTest(ref PlayerDrawSet info) {
-		// not-yet-implemented
 		info.DustCache.Add(1);
 		info.GoreCache.Add(2);
-		// instead-expect
-#if COMPILE_ERROR
-		Main.playerDrawDust.Add(1);
-		Main.playerDrawGore.Add(2);
-#endif	
 	}
 }
