@@ -77,6 +77,7 @@ public class HookRewriter : BaseRewriter
 		RegisterCatchFishBodyRewrites(sym, node);
 		RegisterShootBodyRewrites(sym, node);
 		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
+		RegisterSetNpcNameListBodyRewrites(sym, node);
 		RegisterRemovedHookBodyRewrites(sym, node);
 		RegisterRemovedHookStaticDefaultsMigrations(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
@@ -296,6 +297,27 @@ public class HookRewriter : BaseRewriter
 				continue;
 
 			RegisterAction<MemberAccessExpressionSyntax>(memberAccess, n => IdentifierName("screenPos").WithTriviaFrom(n));
+		}
+	}
+
+	private void RegisterSetNpcNameListBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (sym.Name != "SetNPCNameList" || !sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModNPC"))
+			return;
+
+		if (node.Body != null) {
+			foreach (var returnStatement in node.Body.Statements.OfType<ReturnStatementSyntax>()) {
+				if (returnStatement.Expression == null || returnStatement.Expression is CollectionExpressionSyntax)
+					continue;
+
+				RegisterAction<ReturnStatementSyntax>(returnStatement, n =>
+					n.WithExpression(ParseExpression($"[{n.Expression.WithoutTrivia()}]").WithTriviaFrom(n.Expression)));
+			}
+		}
+
+		if (node.ExpressionBody != null && node.ExpressionBody.Expression is not CollectionExpressionSyntax) {
+			RegisterAction<ArrowExpressionClauseSyntax>(node.ExpressionBody, n =>
+				n.WithExpression(ParseExpression($"[{n.Expression.WithoutTrivia()}]").WithTriviaFrom(n.Expression)));
 		}
 	}
 
