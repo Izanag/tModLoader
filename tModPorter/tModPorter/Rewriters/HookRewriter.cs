@@ -73,6 +73,7 @@ public class HookRewriter : BaseRewriter
 		var sym = model.GetDeclaredSymbol(node);
 		RegisterParameterRenames(sym, node);
 		RegisterBaseMethodInvocationRewrites(sym, node);
+		RegisterPreReforgeCanReforgeMigration(sym, node);
 		RegisterModifyWeaponDamageBodyRewrites(sym, node);
 		RegisterCatchFishBodyRewrites(sym, node);
 		RegisterShootBodyRewrites(sym, node);
@@ -86,6 +87,9 @@ public class HookRewriter : BaseRewriter
 		RegisterRemovedHookBodyRewrites(sym, node);
 		RegisterRemovedHookStaticDefaultsMigrations(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
+		if (sym?.Name == "PreReforge" && node.Identifier.Text == "CanReforge")
+			return node;
+
 		if (!SelectRefactor(sym, out var refactor))
 			return node;
 
@@ -93,6 +97,29 @@ public class HookRewriter : BaseRewriter
 			node = node.WithParameterList(node.ParameterList.WithBlockComment(refactor.comment));
 
 		return node;
+	}
+
+	private void RegisterPreReforgeCanReforgeMigration(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (sym?.Name != "PreReforge")
+			return;
+
+		if (!(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem")))
+			return;
+
+		if (!ReturnsLiteralBoolean(node))
+			return;
+
+		if (node.Parent is not TypeDeclarationSyntax typeDeclaration)
+			return;
+
+		if (typeDeclaration.Members.OfType<MethodDeclarationSyntax>().Any(m => m != node && m.Identifier.Text == "CanReforge"))
+			return;
+
+		RegisterAction<MethodDeclarationSyntax>(node, n =>
+			n.WithIdentifier(n.Identifier.WithText("CanReforge"))
+			 .WithReturnType(PredefinedType(Token(SyntaxKind.BoolKeyword)).WithTriviaFrom(n.ReturnType)));
 	}
 
 	private void RegisterRemovedHookStaticDefaultsMigrations(IMethodSymbol sym, MethodDeclarationSyntax node)
@@ -149,6 +176,12 @@ public class HookRewriter : BaseRewriter
 	private static bool ReturnsLiteralTrue(MethodDeclarationSyntax node) =>
 		node.ExpressionBody?.Expression.IsKind(SyntaxKind.TrueLiteralExpression) == true ||
 		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.TrueLiteralExpression }];
+
+	private static bool ReturnsLiteralBoolean(MethodDeclarationSyntax node) =>
+		node.ExpressionBody?.Expression is LiteralExpressionSyntax literalExpression &&
+			(literalExpression.IsKind(SyntaxKind.TrueLiteralExpression) || literalExpression.IsKind(SyntaxKind.FalseLiteralExpression)) ||
+		node.Body?.Statements is [ReturnStatementSyntax { Expression: LiteralExpressionSyntax returnLiteral }] &&
+			(returnLiteral.IsKind(SyntaxKind.TrueLiteralExpression) || returnLiteral.IsKind(SyntaxKind.FalseLiteralExpression));
 
 	private static bool ReturnsLiteralNull(MethodDeclarationSyntax node) =>
 		node.ExpressionBody?.Expression.IsKind(SyntaxKind.NullLiteralExpression) == true ||

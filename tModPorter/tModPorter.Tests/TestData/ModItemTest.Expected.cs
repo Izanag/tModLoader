@@ -42,9 +42,7 @@ public class ModItemTest : ModItem
 
 	public override ModItem Clone(Item newEntity) { return null; }
 
-#if COMPILE_ERROR
-	public override void PreReforge()/* tModPorter Note: Use CanReforge instead for logic determining if a reforge can happen. */ { return false; /* comment */ }
-#endif
+	public override bool CanReforge()/* tModPorter Note: Use CanReforge instead for logic determining if a reforge can happen. */ { return false; /* comment */ }
 
 	public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */ { return true; /* comment */ }
 
