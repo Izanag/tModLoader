@@ -38,10 +38,5 @@ public class GlobalProjectileTest : GlobalProjectile
 	public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers) { }
 	public override void OnHitPlayer(Projectile projectile, Player target, Player.HurtInfo info) { }
-
-#if COMPILE_ERROR
-	public override void ModifyHitPvp(Projectile projectile, Player target, ref int damage, ref bool crit)/* tModPorter Note: Removed. Use ModifyHitPlayer and check modifiers.PvP */ { }
-	public override void OnHitPvp(Projectile projectile, Player target, int damage, bool crit)/* tModPorter Note: Removed. Use OnHitPlayer and check info.PvP */ { }
-#endif
 	public override void OnKill(Projectile projectile, int timeLeft) { }
 }

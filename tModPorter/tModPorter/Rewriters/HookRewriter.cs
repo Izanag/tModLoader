@@ -695,6 +695,21 @@ public class HookRewriter : BaseRewriter
 			return;
 		}
 
+		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalProjectile")) &&
+			sym.Name is "ModifyHitPvp" or "OnHitPvp") {
+			if (node.Body != null && !node.Body.Statements.Any())
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
+		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile") &&
+			sym.Name == "ModifyFishingLine") {
+			if (node.Body != null && !node.Body.Statements.Any())
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
 		if (sym.Name == "SetMapBackgroundImage" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer")) {
 			if (ReturnsLiteralNull(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
