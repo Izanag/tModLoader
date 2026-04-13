@@ -9,7 +9,7 @@ public class GlobalItemTest : GlobalItem
 {
 	protected override bool CloneNewInstances => true;
 
-	public override Nullable<bool> UseItem(Item item, Player player)/* tModPorter Suggestion: Return null instead of false */ => false;
+	public override Nullable<bool> UseItem(Item item, Player player)/* tModPorter Suggestion: Return null instead of false */ => null;
 
 #if COMPILE_ERROR
 	public override void PreReforge(Item item)/* tModPorter Note: Use CanReforge instead for logic determining if a reforge can happen. */ { return false; /* comment */ }

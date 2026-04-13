@@ -76,6 +76,7 @@ public class HookRewriter : BaseRewriter
 		RegisterModifyWeaponDamageBodyRewrites(sym, node);
 		RegisterCatchFishBodyRewrites(sym, node);
 		RegisterShootBodyRewrites(sym, node);
+		RegisterUseItemBodyRewrites(sym, node);
 		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
 		RegisterSetNpcNameListBodyRewrites(sym, node);
 		RegisterCanHitNpcBodyRewrites(sym, node);
@@ -280,6 +281,31 @@ public class HookRewriter : BaseRewriter
 				continue;
 
 			RegisterAction<IdentifierNameSyntax>(identifier, n => replacement.WithTriviaFrom(n));
+		}
+	}
+
+	private void RegisterUseItemBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (sym.Name != "UseItem")
+			return;
+
+		if (!(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem")))
+			return;
+
+		if (node.Body != null) {
+			foreach (var returnStatement in node.Body.Statements.OfType<ReturnStatementSyntax>()) {
+				if (returnStatement.Expression?.IsKind(SyntaxKind.FalseLiteralExpression) != true)
+					continue;
+
+				RegisterAction<ReturnStatementSyntax>(returnStatement, n =>
+					n.WithExpression(LiteralExpression(SyntaxKind.NullLiteralExpression).WithTriviaFrom(n.Expression)));
+			}
+		}
+
+		if (node.ExpressionBody?.Expression.IsKind(SyntaxKind.FalseLiteralExpression) == true) {
+			RegisterAction<ArrowExpressionClauseSyntax>(node.ExpressionBody, n =>
+				n.WithExpression(LiteralExpression(SyntaxKind.NullLiteralExpression).WithTriviaFrom(n.Expression)));
 		}
 	}
 
