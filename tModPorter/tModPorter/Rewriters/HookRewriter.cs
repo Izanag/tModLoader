@@ -78,6 +78,7 @@ public class HookRewriter : BaseRewriter
 		RegisterShootBodyRewrites(sym, node);
 		RegisterUseItemBodyRewrites(sym, node);
 		RegisterSaveDataBodyRewrites(sym, node);
+		RegisterAddStartingItemsBodyRewrites(sym, node);
 		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
 		RegisterSetNpcNameListBodyRewrites(sym, node);
 		RegisterCanHitNpcBodyRewrites(sym, node);
@@ -348,6 +349,76 @@ public class HookRewriter : BaseRewriter
 		var trailingTrivia = node.Body?.CloseBraceToken.TrailingTrivia ?? node.SemicolonToken.TrailingTrivia;
 		var body = Block().WithCloseBraceToken(Token(TriviaList(), SyntaxKind.CloseBraceToken, trailingTrivia));
 		return node.WithBody(body).WithExpressionBody(null).WithSemicolonToken(default);
+	}
+
+	private void RegisterAddStartingItemsBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (sym.Name != "AddStartingItems" || !sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer") || node.Body == null)
+			return;
+
+		if (sym.Parameters.Length == 1 && HasAddStartingItemsBoolOverload(node)) {
+			RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
+		if (!TryCreateAddStartingItemsReturnBody(node.Body, out var newBody))
+			return;
+
+		RegisterAction<MethodDeclarationSyntax>(node, n => n.WithBody(newBody).WithExpressionBody(null).WithSemicolonToken(default));
+	}
+
+	private bool HasAddStartingItemsBoolOverload(MethodDeclarationSyntax node)
+	{
+		if (node.Parent is not TypeDeclarationSyntax typeDeclaration)
+			return false;
+
+		foreach (var sibling in typeDeclaration.Members.OfType<MethodDeclarationSyntax>()) {
+			if (sibling == node)
+				continue;
+
+			if (model.GetDeclaredSymbol(sibling) is not IMethodSymbol siblingSymbol)
+				continue;
+
+			if (siblingSymbol.Name != "AddStartingItems" || siblingSymbol.Parameters.Length != 2)
+				continue;
+
+			if (siblingSymbol.Parameters[0].Name == "items" && siblingSymbol.Parameters[1].Type.SpecialType == SpecialType.System_Boolean)
+				return true;
+		}
+
+		return false;
+	}
+
+	private bool TryCreateAddStartingItemsReturnBody(BlockSyntax body, out BlockSyntax newBody)
+	{
+		var itemExpressions = new List<string>();
+
+		foreach (var statement in body.Statements) {
+			if (statement is not ExpressionStatementSyntax { Expression: InvocationExpressionSyntax invocation } ||
+				invocation.Expression is not MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax listIdentifier, Name.Identifier.Text: "Add" } memberAccess ||
+				invocation.ArgumentList.Arguments.Count != 1 ||
+				model.GetSymbolInfo(listIdentifier).Symbol is not IParameterSymbol itemsParameter ||
+				itemsParameter.Name != "items")
+				goto Fail;
+
+			var argumentExpression = invocation.ArgumentList.Arguments[0].Expression;
+			var argumentType = model.GetTypeInfo(argumentExpression).Type;
+			var rewrittenExpression = argumentType?.InheritsFrom("Terraria.Item") == true
+				? argumentExpression.WithoutTrivia().ToString()
+				: $"new Item({argumentExpression.WithoutTrivia()})";
+
+			itemExpressions.Add(rewrittenExpression);
+			continue;
+
+		Fail:
+			newBody = null;
+			return false;
+		}
+
+		var trailingTrivia = body.CloseBraceToken.TrailingTrivia;
+		var returnStatement = (ReturnStatementSyntax)ParseStatement($"return [{string.Join(", ", itemExpressions)}];");
+		newBody = Block(returnStatement).WithCloseBraceToken(Token(TriviaList(), SyntaxKind.CloseBraceToken, trailingTrivia));
+		return true;
 	}
 
 	private void RegisterNpcDrawScreenPosBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
