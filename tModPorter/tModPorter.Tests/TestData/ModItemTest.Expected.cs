@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -30,6 +31,7 @@ public class ModItemTest : ModItem
 			"This tooltip\n" +
 			"Has multiple lines"); */
 		Terraria.ID.AmmoID.Sets.IsSpecialist[Type] = true;
+		ItemID.Sets.Torches[Type] = true;
 	}
 
 #if COMPILE_ERROR
@@ -79,11 +81,4 @@ public class ModItemTest : ModItem
 	public override void OnHitNPC(Player player, NPC target, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitPvp(Player player, Player target, ref Player.HurtModifiers modifiers) { }
 	public override void OnHitPvp(Player player, Player target, Player.HurtInfo hurtInfo) { }
-
-#if COMPILE_ERROR
-	public override void AutoLightSelect(ref bool dryTorch, ref bool wetTorch, ref bool glowstick)/* tModPorter Note: Removed. Use ItemID.Sets.Torches[Type], ItemID.Sets.WaterTorches[Type], and ItemID.Sets.Glowsticks[Type] in SetStaticDefaults */
-	{
-		dryTorch = true;
-	}
-#endif
 }

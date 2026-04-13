@@ -127,6 +127,11 @@ public class HookRewriter : BaseRewriter
 		if (!SelectRefactor(sym, out var refactor) || !refactor.removed)
 			return;
 
+		if (sym.Name == "AutoLightSelect" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem")) {
+			RegisterAutoLightSelectMigration(node);
+			return;
+		}
+
 		if (sym.Name != "SingleGrappleHook" || !sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile"))
 			return;
 
@@ -187,6 +192,64 @@ public class HookRewriter : BaseRewriter
 		node.ExpressionBody?.Expression.IsKind(SyntaxKind.NullLiteralExpression) == true ||
 		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.NullLiteralExpression }];
 
+	private void RegisterAutoLightSelectMigration(MethodDeclarationSyntax node)
+	{
+		if (node.Body == null || node.Parent is not TypeDeclarationSyntax typeDecl)
+			return;
+
+		var assignments = TryCreateAutoLightSelectAssignments(node.Body);
+		if (assignments == null)
+			return;
+
+		RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+		RegisterAction<TypeDeclarationSyntax>(typeDecl, t => InsertAutoLightSelectAssignments(t, assignments));
+	}
+
+	private List<StatementSyntax> TryCreateAutoLightSelectAssignments(BlockSyntax body)
+	{
+		var parameterToSetName = new Dictionary<string, string>(StringComparer.Ordinal) {
+			["dryTorch"] = "Torches",
+			["wetTorch"] = "WaterTorches",
+			["glowstick"] = "Glowsticks",
+		};
+
+		var enabledSets = new HashSet<string>(StringComparer.Ordinal);
+		foreach (var statement in body.Statements) {
+			if (statement is not ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment } ||
+				!assignment.IsKind(SyntaxKind.SimpleAssignmentExpression) ||
+				assignment.Left is not IdentifierNameSyntax identifier ||
+				assignment.Right is not LiteralExpressionSyntax literal)
+				return null;
+
+			if (!parameterToSetName.TryGetValue(identifier.Identifier.Text, out var setName))
+				return null;
+
+			if (literal.IsKind(SyntaxKind.TrueLiteralExpression))
+				enabledSets.Add(setName);
+			else if (!literal.IsKind(SyntaxKind.FalseLiteralExpression))
+				return null;
+		}
+
+		return enabledSets
+			.Select(CreateAutoLightSelectAssignment)
+			.Cast<StatementSyntax>()
+			.ToList();
+	}
+
+	private ExpressionStatementSyntax CreateAutoLightSelectAssignment(string setName) =>
+		ExpressionStatement(
+			AssignmentExpression(
+				ElementAccessExpression(
+					MemberAccessExpression(
+						MemberAccessExpression(UseType("Terraria.ID.ItemID"), "Sets"),
+						setName
+					),
+					BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("Type"))))
+				),
+				LiteralExpression(SyntaxKind.TrueLiteralExpression)
+			)
+		);
+
 	private static MethodDeclarationSyntax InsertSingleGrappleHookAssignment(MethodDeclarationSyntax method, StatementSyntax assignmentStatement)
 	{
 		bool HasAssignment(StatementSyntax statement) => statement.ToString().Replace(" ", "") == assignmentStatement.ToString().Replace(" ", "");
@@ -203,6 +266,57 @@ public class HookRewriter : BaseRewriter
 			.WithExpressionBody(null)
 			.WithSemicolonToken(default)
 			.WithBody(body);
+	}
+
+	private static MethodDeclarationSyntax InsertStaticDefaultsAssignments(MethodDeclarationSyntax method, IEnumerable<StatementSyntax> assignments)
+	{
+		var distinctAssignments = assignments
+			.Select(FormatInsertedStatement)
+			.ToList();
+		bool HasAssignment(StatementSyntax statement, StatementSyntax assignment) => statement.ToString().Replace(" ", "") == assignment.ToString().Replace(" ", "");
+
+		if (method.Body != null) {
+			var statementsToAdd = distinctAssignments
+				.Where(assignment => !method.Body.Statements.Any(existing => HasAssignment(existing, assignment)))
+				.ToArray();
+
+			if (statementsToAdd.Length == 0)
+				return method;
+
+			return method.WithBody(method.Body.AddStatements(statementsToAdd));
+		}
+
+		var body = Block(distinctAssignments);
+		return method
+			.WithExpressionBody(null)
+			.WithSemicolonToken(default)
+			.WithBody(body);
+	}
+
+	private static StatementSyntax FormatInsertedStatement(StatementSyntax statement) =>
+		statement.WithLeadingTrivia(Tab, Tab).WithTrailingTrivia(CarriageReturnLineFeed);
+
+	private static TypeDeclarationSyntax InsertAutoLightSelectAssignments(TypeDeclarationSyntax typeDeclaration, IEnumerable<StatementSyntax> assignments)
+	{
+		var setStaticDefaultsMethod = typeDeclaration.Members
+			.OfType<MethodDeclarationSyntax>()
+			.FirstOrDefault(m => m.Identifier.Text == "SetStaticDefaults" && m.ParameterList.Parameters.Count == 0);
+
+		if (setStaticDefaultsMethod != null) {
+			var newMembers = typeDeclaration.Members.Replace(setStaticDefaultsMethod, InsertStaticDefaultsAssignments(setStaticDefaultsMethod, assignments));
+			return typeDeclaration.WithMembers(newMembers);
+		}
+
+		var newMethod = (MethodDeclarationSyntax)ParseMemberDeclaration(
+@"public override void SetStaticDefaults()
+	{
+	}")!;
+		newMethod = newMethod
+			.WithLeadingTrivia(Tab)
+			.WithTrailingTrivia(CarriageReturnLineFeed);
+		newMethod = InsertStaticDefaultsAssignments(newMethod, assignments);
+
+		return typeDeclaration.AddMembers(newMethod);
 	}
 
 	private void RegisterModifyWeaponDamageBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
