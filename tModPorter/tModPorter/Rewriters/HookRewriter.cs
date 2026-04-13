@@ -74,6 +74,7 @@ public class HookRewriter : BaseRewriter
 		RegisterParameterRenames(sym, node);
 		RegisterBaseMethodInvocationRewrites(sym, node);
 		RegisterRemovedHookBodyRewrites(sym, node);
+		RegisterRemovedHookStaticDefaultsMigrations(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
 		if (!SelectRefactor(sym, out var refactor))
 			return node;
@@ -82,6 +83,79 @@ public class HookRewriter : BaseRewriter
 			node = node.WithParameterList(node.ParameterList.WithBlockComment(refactor.comment));
 
 		return node;
+	}
+
+	private void RegisterRemovedHookStaticDefaultsMigrations(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		if (!SelectRefactor(sym, out var refactor) || !refactor.removed)
+			return;
+
+		if (sym.Name != "SingleGrappleHook" || !sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile"))
+			return;
+
+		if (!ReturnsLiteralTrue(node))
+			return;
+
+		if (node.Parent is not TypeDeclarationSyntax typeDecl)
+			return;
+
+		RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+
+		var assignmentStatement = ExpressionStatement(
+			AssignmentExpression(
+				SyntaxKind.SimpleAssignmentExpression,
+				ElementAccessExpression(
+					MemberAccessExpression(
+						MemberAccessExpression(UseType("Terraria.ID.ProjectileID"), "Sets"),
+						"SingleGrappleHook"
+					),
+					BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("Type"))))
+				),
+				LiteralExpression(SyntaxKind.TrueLiteralExpression)
+			)
+		);
+
+		var setStaticDefaultsMethod = typeDecl.Members
+			.OfType<MethodDeclarationSyntax>()
+			.FirstOrDefault(m => m.Identifier.Text == "SetStaticDefaults" && m.ParameterList.Parameters.Count == 0);
+
+		if (setStaticDefaultsMethod != null) {
+			RegisterAction<MethodDeclarationSyntax>(setStaticDefaultsMethod, m => InsertSingleGrappleHookAssignment(m, assignmentStatement));
+			return;
+		}
+
+		var newMethod = (MethodDeclarationSyntax)ParseMemberDeclaration(
+@"public override void SetStaticDefaults()
+	{
+		ProjectileID.Sets.SingleGrappleHook[Type] = true;
+	}")!;
+		newMethod = newMethod
+			.WithLeadingTrivia(Tab)
+			.WithTrailingTrivia(CarriageReturnLineFeed);
+
+		RegisterAction<TypeDeclarationSyntax>(typeDecl, t => t.AddMembers(newMethod));
+	}
+
+	private static bool ReturnsLiteralTrue(MethodDeclarationSyntax node) =>
+		node.ExpressionBody?.Expression.IsKind(SyntaxKind.TrueLiteralExpression) == true ||
+		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.TrueLiteralExpression }];
+
+	private static MethodDeclarationSyntax InsertSingleGrappleHookAssignment(MethodDeclarationSyntax method, StatementSyntax assignmentStatement)
+	{
+		bool HasAssignment(StatementSyntax statement) => statement.ToString().Replace(" ", "") == assignmentStatement.ToString().Replace(" ", "");
+
+		if (method.Body != null) {
+			if (method.Body.Statements.Any(HasAssignment))
+				return method;
+
+			return method.WithBody(method.Body.AddStatements(assignmentStatement));
+		}
+
+		var body = Block(assignmentStatement);
+		return method
+			.WithExpressionBody(null)
+			.WithSemicolonToken(default)
+			.WithBody(body);
 	}
 
 	private void RegisterRemovedHookBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
