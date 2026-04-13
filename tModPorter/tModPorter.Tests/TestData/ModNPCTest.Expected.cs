@@ -17,9 +17,7 @@ public class ModNPCTest : ModNPC
 		Console.Write(DrawOffsetY);
 		Console.Write(Banner);
 		Console.Write(BannerItem);
-#if COMPILE_ERROR
-		Console.Write(bossBag/* tModPorter Note: Removed. Spawn the treasure bag alongside other loot via npcLoot.Add(ItemDropRule.BossBag(type)) */);
-#endif
+		;/* tModPorter Note: Removed. Spawn the treasure bag alongside other loot via npcLoot.Add(ItemDropRule.BossBag(type)) */
 	}
 
 	public override bool PreKill() { return true; /*empty*/ }

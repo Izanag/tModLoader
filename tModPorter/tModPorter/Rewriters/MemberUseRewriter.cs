@@ -24,7 +24,10 @@ public class MemberUseRewriter : BaseRewriter {
 
 	public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
 		bool invalid = IdentifierNameInvalid(node, out var op, out var targetType, out bool isInvoke);
-		if ((!invalid || op == null || isInvoke) && !TryGetWorldItemActiveAssignment(node, ref op, ref targetType))
+		if ((!invalid || isInvoke) && !TryGetWorldItemActiveAssignment(node, ref op, ref targetType))
+			return node;
+
+		if (op == null && !CanRewriteWithoutOperation(node))
 			return node;
 
 		if (targetType == null)
@@ -37,6 +40,10 @@ public class MemberUseRewriter : BaseRewriter {
 
 		return handler.handler.Invoke(this, op, node);
 	}
+
+	private static bool CanRewriteWithoutOperation(IdentifierNameSyntax node) =>
+		node.FirstAncestorOrSelf<ExpressionStatementSyntax>() != null ||
+		node.FirstAncestorOrSelf<VariableDeclaratorSyntax>() != null;
 
 	private bool TryGetWorldItemActiveAssignment(IdentifierNameSyntax node, ref IOperation op, ref ITypeSymbol targetType)
 	{

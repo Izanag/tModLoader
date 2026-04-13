@@ -60,7 +60,7 @@ public static partial class Config
 		RefactorInstanceMember("Terraria.ModLoader.ModBuff",		"canBeCleared",			Removed("Use BuffID.Sets.NurseCannotRemoveDebuff instead, and invert the logic"));
 		RefactorInstanceMember("Terraria.ModLoader.ModBuff",		"longerExpertDebuff",	Removed("Use BuffID.Sets.LongerExpertDebuff instead"));
 		RefactorInstanceMember("Terraria.ModLoader.EquipTexture",	"mod",					Removed(""));
-		RefactorInstanceMember("Terraria.ModLoader.ModNPC",			"bossBag",				Removed("Spawn the treasure bag alongside other loot via npcLoot.Add(ItemDropRule.BossBag(type))"));
+		RefactorInstanceMember("Terraria.ModLoader.ModNPC",			"bossBag",				RemoveContainingStatementOrInitializer("Spawn the treasure bag alongside other loot via npcLoot.Add(ItemDropRule.BossBag(type))"));
 		RefactorInstanceMember("Terraria.ModLoader.Mod",			"Properties",			Removed("Instead, assign the properties directly (ContentAutoloadingEnabled, GoreAutoloadingEnabled, MusicAutoloadingEnabled, and BackgroundAutoloadingEnabled)"));
 		RefactorInstanceMember("Terraria.ModLoader.ModBlockType",	"soundStyle",			Removed("Integrate into HitSound"));
 		RefactorInstanceMember("Terraria.ModLoader.ModTile",		"sapling",				Removed("Use TileID.Sets.TreeSapling and TileID.Sets.CommonSapling instead"));
