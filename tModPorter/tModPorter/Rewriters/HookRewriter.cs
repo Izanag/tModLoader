@@ -795,6 +795,13 @@ public class HookRewriter : BaseRewriter
 			return;
 		}
 
+		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModSystem") &&
+			sym.Name == "SetLanguage") {
+			if (node.Body != null && !node.Body.Statements.Any())
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
 		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
 			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem")) &&
 			sym.Name is "DrawHead" or "DrawBody" or "DrawLegs") {
