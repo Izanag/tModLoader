@@ -691,6 +691,9 @@ public class HookRewriter : BaseRewriter
 		node.ExpressionBody?.Expression.IsKind(SyntaxKind.FalseLiteralExpression) == true ||
 		node.Body?.Statements is [ReturnStatementSyntax { Expression.RawKind: (int)SyntaxKind.FalseLiteralExpression }];
 
+	private static bool HasNoOpBody(MethodDeclarationSyntax node) =>
+		node.Body != null && node.Body.Statements.All(statement => statement is EmptyStatementSyntax);
+
 	private static MethodDeclarationSyntax CreateEmptyModifyHurtMethod(MethodDeclarationSyntax node)
 	{
 		var trailingTrivia = node.Body?.CloseBraceToken.TrailingTrivia ?? node.SemicolonToken.TrailingTrivia;
@@ -832,14 +835,14 @@ public class HookRewriter : BaseRewriter
 
 		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPrefix") &&
 			sym.Name == "AutoStaticDefaults") {
-			if (node.Body != null && !node.Body.Statements.Any())
+			if (HasNoOpBody(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 			return;
 		}
 
 		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModSystem") &&
 			sym.Name == "SetLanguage") {
-			if (node.Body != null && !node.Body.Statements.Any())
+			if (HasNoOpBody(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 			return;
 		}
@@ -855,7 +858,7 @@ public class HookRewriter : BaseRewriter
 		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
 			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem")) &&
 			sym.Name is "DrawHands" or "DrawHair") {
-			if (!node.Body.Statements.Any())
+			if (HasNoOpBody(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 			return;
 		}
@@ -878,7 +881,7 @@ public class HookRewriter : BaseRewriter
 
 		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer") &&
 			sym.Name is "ModifyHitPvp" or "OnHitPvp" or "ModifyHitPvpWithProj" or "OnHitPvpWithProj") {
-			if (node.Body != null && !node.Body.Statements.Any())
+			if (HasNoOpBody(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 			return;
 		}
@@ -886,14 +889,14 @@ public class HookRewriter : BaseRewriter
 		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile") ||
 			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalProjectile")) &&
 			sym.Name is "ModifyHitPvp" or "OnHitPvp") {
-			if (node.Body != null && !node.Body.Statements.Any())
+			if (HasNoOpBody(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 			return;
 		}
 
 		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile") &&
 			sym.Name == "ModifyFishingLine") {
-			if (node.Body != null && !node.Body.Statements.Any())
+			if (HasNoOpBody(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 			return;
 		}

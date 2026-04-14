@@ -167,6 +167,24 @@ public class MemberUseRewriter : BaseRewriter {
 		return memberName;
 	};
 
+	public static RewriteMemberUse ModPropertiesInitializer() => (rw, op, memberName) => {
+		if (memberName.FirstAncestorOrSelf<ExpressionStatementSyntax>() is not ExpressionStatementSyntax expressionStatement ||
+			expressionStatement.Expression is not AssignmentExpressionSyntax assignment ||
+			assignment.Left is not IdentifierNameSyntax { Identifier.Text: "Properties" } ||
+			assignment.Right is not ObjectCreationExpressionSyntax { Initializer.Expressions: var initializerExpressions })
+			return memberName.WithBlockComment("Removed: Instead, assign the properties directly (ContentAutoloadingEnabled, GoreAutoloadingEnabled, MusicAutoloadingEnabled, and BackgroundAutoloadingEnabled)");
+
+		if (!TryCreateModPropertyAssignments(initializerExpressions, out var assignments))
+			return memberName.WithBlockComment("Removed: Instead, assign the properties directly (ContentAutoloadingEnabled, GoreAutoloadingEnabled, MusicAutoloadingEnabled, and BackgroundAutoloadingEnabled)");
+
+		StatementSyntax replacement = assignments.Count == 1
+			? assignments[0]
+			: Block(assignments);
+
+		rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n => replacement.WithTriviaFrom(n));
+		return memberName;
+	};
+
 	public static RewriteMemberUse ModBuffCanBeCleared() => (rw, op, memberName) => {
 		var assignment = memberName.FirstAncestorOrSelf<AssignmentExpressionSyntax>();
 		if (assignment?.Parent is ExpressionStatementSyntax expressionStatement &&
@@ -435,6 +453,28 @@ public class MemberUseRewriter : BaseRewriter {
 		assignments = buffExpressions
 			.Select(buffExpr => (StatementSyntax)ParseStatement($"NPCID.Sets.SpecificDebuffImmunity[{npcIndexExpr}][{buffExpr}] = true;"))
 			.ToList();
+		return true;
+	}
+
+	private static bool TryCreateModPropertyAssignments(SeparatedSyntaxList<ExpressionSyntax> initializerExpressions, out List<StatementSyntax> assignments)
+	{
+		var propertyMap = new Dictionary<string, string> {
+			["Autoload"] = "ContentAutoloadingEnabled",
+			["AutoloadBackgrounds"] = "BackgroundAutoloadingEnabled",
+			["AutoloadGores"] = "GoreAutoloadingEnabled",
+			["AutoloadSounds"] = "MusicAutoloadingEnabled",
+		};
+
+		assignments = new();
+		foreach (var expression in initializerExpressions) {
+			if (expression is not AssignmentExpressionSyntax assignment ||
+				assignment.Left is not IdentifierNameSyntax identifier ||
+				!propertyMap.TryGetValue(identifier.Identifier.Text, out var replacementProperty))
+				return false;
+
+			assignments.Add(ParseStatement($"{replacementProperty} = {assignment.Right.WithoutTrivia()};"));
+		}
+
 		return true;
 	}
 
