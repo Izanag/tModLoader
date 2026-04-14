@@ -180,6 +180,11 @@ public class HookRewriter : BaseRewriter
 			return;
 		}
 
+		if (sym.Name == "DrawBehind" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModGore")) {
+			RegisterModGoreDrawBehindMigration(node);
+			return;
+		}
+
 		if (sym.Name != "SingleGrappleHook" || !sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile"))
 			return;
 
@@ -277,6 +282,28 @@ public class HookRewriter : BaseRewriter
 
 		RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 		RegisterAction<TypeDeclarationSyntax>(typeDecl, t => InsertAutoLightSelectAssignments(t, assignments));
+	}
+
+	private void RegisterModGoreDrawBehindMigration(MethodDeclarationSyntax node)
+	{
+		if (!ReturnsLiteralTrue(node) || node.Parent is not TypeDeclarationSyntax typeDecl)
+			return;
+
+		var assignment = ExpressionStatement(
+			AssignmentExpression(
+				ElementAccessExpression(
+					MemberAccessExpression(
+						MemberAccessExpression(UseType("Terraria.ID.GoreID"), "Sets"),
+						"DrawBehind"
+					),
+					BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("Type"))))
+				),
+				LiteralExpression(SyntaxKind.TrueLiteralExpression)
+			)
+		);
+
+		RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+		RegisterAction<TypeDeclarationSyntax>(typeDecl, t => InsertAutoLightSelectAssignments(t, new[] { assignment }));
 	}
 
 	private List<StatementSyntax> TryCreateAutoLightSelectAssignments(BlockSyntax body)
@@ -816,6 +843,12 @@ public class HookRewriter : BaseRewriter
 
 		if (sym.Name == "SetMapBackgroundImage" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer")) {
 			if (ReturnsLiteralNull(node))
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
+		if (sym.Name == "DrawBehind" && sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModGore")) {
+			if (ReturnsLiteralFalse(node))
 				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 			return;
 		}
