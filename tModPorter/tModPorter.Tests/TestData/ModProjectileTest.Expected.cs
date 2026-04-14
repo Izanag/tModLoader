@@ -42,10 +42,6 @@ public class ModProjectileTest : ModProjectile
 		Projectile.drawLayer=ProjectileDrawLayerID.OverWiresUI;
 	}
 #endif
-
-#if COMPILE_ERROR // duplicate method
-	public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
-#endif
 	public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
 	public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damage) { }
 	public override void ModifyHitPlayer(Player target, ref Player.HurtModifiers modifiers) { }

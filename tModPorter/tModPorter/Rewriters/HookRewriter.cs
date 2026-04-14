@@ -72,6 +72,11 @@ public class HookRewriter : BaseRewriter
 
 	public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node) {
 		var sym = model.GetDeclaredSymbol(node);
+		if (ShouldRemoveNoOpModifyDamageScaling(sym, node))
+			return null;
+		if (ShouldRemoveDuplicateProjectileModifyHitNpc(node))
+			return null;
+
 		RegisterParameterRenames(sym, node);
 		RegisterBaseMethodInvocationRewrites(sym, node);
 		RegisterPreReforgeCanReforgeMigration(sym, node);
@@ -134,6 +139,35 @@ public class HookRewriter : BaseRewriter
 		RegisterAction<MethodDeclarationSyntax>(node, n =>
 			n.WithIdentifier(n.Identifier.WithText("CanReforge"))
 			 .WithReturnType(PredefinedType(Token(SyntaxKind.BoolKeyword)).WithTriviaFrom(n.ReturnType)));
+	}
+
+	private bool ShouldRemoveNoOpModifyDamageScaling(IMethodSymbol sym, MethodDeclarationSyntax node) =>
+		sym?.Name == "ModifyDamageScaling" &&
+		(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModProjectile") ||
+		 sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalProjectile")) &&
+		node.Body != null &&
+		!node.Body.Statements.Any();
+
+	private static bool ShouldRemoveDuplicateProjectileModifyHitNpc(MethodDeclarationSyntax node)
+	{
+		if (node.Identifier.Text != "ModifyHitNPC" || node.Parent is not TypeDeclarationSyntax typeDeclaration)
+			return false;
+
+		bool projectileType = typeDeclaration.BaseList?.Types.Any(t => {
+			string name = t.Type.ToString();
+			return name is "ModProjectile" or "GlobalProjectile";
+		}) == true;
+
+		if (!projectileType)
+			return false;
+
+		string signature = string.Join("|", node.ParameterList.Parameters.Select(p => p.Type?.ToString()));
+		return typeDeclaration.Members
+			.OfType<MethodDeclarationSyntax>()
+			.Any(m => m != node &&
+				m.Identifier.Text == node.Identifier.Text &&
+				string.Join("|", m.ParameterList.Parameters.Select(p => p.Type?.ToString())) == signature &&
+				m.SpanStart > node.SpanStart);
 	}
 
 	private void RegisterRemovedHookStaticDefaultsMigrations(IMethodSymbol sym, MethodDeclarationSyntax node)
