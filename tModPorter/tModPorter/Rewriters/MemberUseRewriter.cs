@@ -167,6 +167,94 @@ public class MemberUseRewriter : BaseRewriter {
 		return memberName;
 	};
 
+	public static RewriteMemberUse ModBuffCanBeCleared() => (rw, op, memberName) => {
+		var assignment = memberName.FirstAncestorOrSelf<AssignmentExpressionSyntax>();
+		if (assignment?.Parent is ExpressionStatementSyntax expressionStatement &&
+			assignment.Left is IdentifierNameSyntax { Identifier.Text: "canBeCleared" } &&
+			assignment.Right is LiteralExpressionSyntax literal) {
+			if (literal.IsKind(SyntaxKind.FalseLiteralExpression)) {
+				var replacement = ParseStatement("BuffID.Sets.NurseCannotRemoveDebuff[Type] = true;");
+				rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n => replacement.WithTriviaFrom(n));
+				return memberName;
+			}
+
+			if (literal.IsKind(SyntaxKind.TrueLiteralExpression)) {
+				rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n =>
+					EmptyStatement().WithTriviaFrom(n).WithBlockComment("Note: Removed. canBeCleared defaults to true.")
+				);
+				return memberName;
+			}
+		}
+
+		var rootExpr = GetContainingExpression(memberName);
+		rw.RegisterAction<ExpressionSyntax>(rootExpr, n =>
+			PrefixUnaryExpression(
+				SyntaxKind.LogicalNotExpression,
+				ElementAccessExpression(
+					MemberAccessExpression(
+						MemberAccessExpression(rw.UseType("Terraria.ID.BuffID"), "Sets"),
+						"NurseCannotRemoveDebuff"
+					),
+					BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("Type"))))
+				)
+			).WithTriviaFrom(n)
+		);
+
+		return memberName;
+	};
+
+	public static RewriteMemberUse ModBuffLongerExpertDebuff() => (rw, op, memberName) => {
+		var assignment = memberName.FirstAncestorOrSelf<AssignmentExpressionSyntax>();
+		if (assignment?.Parent is ExpressionStatementSyntax expressionStatement &&
+			assignment.Left is IdentifierNameSyntax { Identifier.Text: "longerExpertDebuff" } &&
+			assignment.Right is LiteralExpressionSyntax literal) {
+			if (literal.IsKind(SyntaxKind.TrueLiteralExpression)) {
+				var replacement = ParseStatement("BuffID.Sets.BuffTimeIsExtendedWithGameDifficulty[Type] = true;");
+				rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n => replacement.WithTriviaFrom(n));
+				return memberName;
+			}
+
+			if (literal.IsKind(SyntaxKind.FalseLiteralExpression)) {
+				rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n =>
+					EmptyStatement().WithTriviaFrom(n).WithBlockComment("Note: Removed. BuffTimeIsExtendedWithGameDifficulty defaults to false.")
+				);
+				return memberName;
+			}
+		}
+
+		var rootExpr = GetContainingExpression(memberName);
+		rw.RegisterAction<ExpressionSyntax>(rootExpr, n =>
+			ElementAccessExpression(
+				MemberAccessExpression(
+					MemberAccessExpression(rw.UseType("Terraria.ID.BuffID"), "Sets"),
+					"BuffTimeIsExtendedWithGameDifficulty"
+				),
+				BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("Type"))))
+			).WithTriviaFrom(n)
+		);
+
+		return memberName;
+	};
+
+	public static RewriteMemberUse BuffBasicMountData() => (rw, op, memberName) => {
+		if (memberName.FirstAncestorOrSelf<AssignmentExpressionSyntax>() is not AssignmentExpressionSyntax assignment ||
+			assignment.Parent is not ExpressionStatementSyntax expressionStatement ||
+			assignment.Left is not ElementAccessExpressionSyntax { Expression: MemberAccessExpressionSyntax { Name.Identifier.Text: "BasicMountData" }, ArgumentList.Arguments.Count: 1 } elementAccess ||
+			assignment.Right is not ObjectCreationExpressionSyntax { Initializer.Expressions: var initializerExpressions })
+			return memberName.WithBlockComment("Removed: Replace with BuffID.Sets.MountType[Type] = ModContent.MountType<MyMount>();");
+
+		var mountAssignment = initializerExpressions
+			.OfType<AssignmentExpressionSyntax>()
+			.FirstOrDefault(a => a.Left is IdentifierNameSyntax { Identifier.Text: "mountID" });
+		if (mountAssignment == null)
+			return memberName.WithBlockComment("Removed: Replace with BuffID.Sets.MountType[Type] = ModContent.MountType<MyMount>();");
+
+		var buffIndexExpr = elementAccess.ArgumentList.Arguments[0].Expression;
+		var replacement = ParseStatement($"BuffID.Sets.MountType[{buffIndexExpr}] = {mountAssignment.Right};");
+		rw.RegisterAction<ExpressionStatementSyntax>(expressionStatement, n => replacement.WithTriviaFrom(n));
+		return memberName;
+	};
+
 	public static RewriteMemberUse ReplaceContainingMemberAccess(System.Func<ExpressionSyntax, ExpressionSyntax> replacementFactory) => (rw, op, memberName) => {
 		if (memberName.Parent is not MemberAccessExpressionSyntax access)
 			return memberName;

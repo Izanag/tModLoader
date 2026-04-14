@@ -56,9 +56,9 @@ public static partial class Config
 		RenameInstanceField("Terraria.ModLoader.ModGore", from: "updateType",	to: "UpdateType");
 		RenameInstanceField("Terraria.ModLoader.ModDust", from: "updateType",	to: "UpdateType");
 
-		RefactorInstanceMethodCall("Terraria.ModLoader.BuffLoader", "CanBeCleared",			Removed("Use !BuffID.Sets.NurseCannotRemoveDebuff instead"));
-		RefactorInstanceMember("Terraria.ModLoader.ModBuff",		"canBeCleared",			Removed("Use BuffID.Sets.NurseCannotRemoveDebuff instead, and invert the logic"));
-		RefactorInstanceMember("Terraria.ModLoader.ModBuff",		"longerExpertDebuff",	Removed("Use BuffID.Sets.LongerExpertDebuff instead"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.BuffLoader", "CanBeCleared",			RewriteCanBeClearedCall);
+		RefactorInstanceMember("Terraria.ModLoader.ModBuff",		"canBeCleared",			ModBuffCanBeCleared());
+		RefactorInstanceMember("Terraria.ModLoader.ModBuff",		"longerExpertDebuff",	ModBuffLongerExpertDebuff());
 		RefactorInstanceMember("Terraria.ModLoader.EquipTexture",	"mod",					Removed(""));
 		RefactorInstanceMember("Terraria.ModLoader.ModNPC",			"bossBag",				RemoveContainingStatementOrInitializer("Spawn the treasure bag alongside other loot via npcLoot.Add(ItemDropRule.BossBag(type))"));
 		RefactorInstanceMember("Terraria.ModLoader.Mod",			"Properties",			Removed("Instead, assign the properties directly (ContentAutoloadingEnabled, GoreAutoloadingEnabled, MusicAutoloadingEnabled, and BackgroundAutoloadingEnabled)"));

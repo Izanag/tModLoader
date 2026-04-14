@@ -18,3 +18,7 @@ public class ModBuffTest : ModBuff
 
 	public override void ModifyBuffTip(ref string tip, ref int rare) { }
 }
+
+public class ExampleMinecartMount : ModMount
+{
+}

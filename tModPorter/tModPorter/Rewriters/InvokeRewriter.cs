@@ -202,6 +202,25 @@ public partial class InvokeRewriter : BaseRewriter
 		return replacement;
 	};
 
+	public static RewriteInvoke RewriteCanBeClearedCall => (rw, invoke, _) => {
+		if (invoke.ArgumentList.Arguments.Count != 1)
+			return invoke.WithBlockComment("Note: Removed. Use !BuffID.Sets.NurseCannotRemoveDebuff instead");
+
+		var buffExpr = invoke.ArgumentList.Arguments[0].Expression.WithoutTrivia();
+		var replacement = PrefixUnaryExpression(
+			SyntaxKind.LogicalNotExpression,
+			ElementAccessExpression(
+				MemberAccessExpression(
+					MemberAccessExpression(rw.UseType("Terraria.ID.BuffID"), "Sets"),
+					"NurseCannotRemoveDebuff"
+				),
+				BracketedArgumentList(SingletonSeparatedList(Argument(buffExpr)))
+			)
+		);
+
+		return replacement.WithTriviaFrom(invoke);
+	};
+
 	public static RewriteInvoke ConvertAddEquipTexture => (rw, invoke, methodName) => {
 		var paramOps = invoke.ArgumentList.Arguments.Select(arg => rw.model.GetOperation(arg.Expression)).ToArray();
 		var method = rw.model.Compilation.GetTypeByMetadataName("Terraria.ModLoader.EquipLoader").LookupMember<IMethodSymbol>("AddEquipTexture");
