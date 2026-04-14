@@ -86,6 +86,7 @@ public class HookRewriter : BaseRewriter
 		RegisterUseItemBodyRewrites(sym, node);
 		RegisterSaveDataBodyRewrites(sym, node);
 		RegisterAddStartingItemsBodyRewrites(sym, node);
+		RegisterEmptyModPrefixAllStatChangesMigration(sym, node);
 		RegisterModifyHurtBodyRewrites(sym, node);
 		RegisterModifyIncomingHitBodyRewrites(sym, node);
 		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
@@ -787,6 +788,13 @@ public class HookRewriter : BaseRewriter
 		if (!SelectRefactor(sym, out var refactor) || !refactor.removed)
 			return;
 
+		if (sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPrefix") &&
+			sym.Name == "AutoStaticDefaults") {
+			if (node.Body != null && !node.Body.Statements.Any())
+				RegisterAction<MethodDeclarationSyntax>(node, _ => null);
+			return;
+		}
+
 		if ((sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
 			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem")) &&
 			sym.Name is "DrawHead" or "DrawBody" or "DrawLegs") {
@@ -885,6 +893,21 @@ public class HookRewriter : BaseRewriter
 
 			RegisterAction<InvocationExpressionSyntax>(invoke, _ => replacement);
 		}
+	}
+
+	private void RegisterEmptyModPrefixAllStatChangesMigration(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		bool isModPrefix = sym?.ContainingType.InheritsFrom("Terraria.ModLoader.ModPrefix") == true ||
+			(node.Parent as TypeDeclarationSyntax)?.BaseList?.Types.Any(t => t.Type.ToString() == "ModPrefix") == true;
+
+		if (!isModPrefix)
+			return;
+
+		bool renamedValidateItem = sym?.Name == "ValidateItem" || node.Identifier.Text == "AllStatChangesHaveEffectOn";
+		if (!renamedValidateItem || node.Body == null || node.Body.Statements.Any())
+			return;
+
+		RegisterAction<MethodDeclarationSyntax>(node, _ => null);
 	}
 
 	private void RegisterParameterRenames(IMethodSymbol sym, MethodDeclarationSyntax node) {
