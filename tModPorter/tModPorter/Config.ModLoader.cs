@@ -77,8 +77,12 @@ public static partial class Config
 		RefactorInstanceMethodCall("Terraria.ModLoader.ModTile",	"SetModCactus",			Removed("Assign GrowsOnTileId to this tile type in ModCactus.SetStaticDefaults instead"));
 		RefactorInstanceMethodCall("Terraria.ModLoader.ModTile",	"SetModPalmTree",		Removed("Assign GrowsOnTileId to this tile type in ModPalmTree.SetStaticDefaults instead"));
 
-		RefactorInstanceMember("Terraria.DataStructures.BossBarDrawParams", "LifePercentToShow",	Removed("Suggest: Life / LifeMax"));
-		RefactorInstanceMember("Terraria.DataStructures.BossBarDrawParams", "ShieldPercentToShow",	Removed("Suggest: Shield / ShieldMax"));
+		RefactorInstanceMember("Terraria.DataStructures.BossBarDrawParams", "LifePercentToShow", ReplaceContainingMemberAccess(expr =>
+			Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseExpression($"{expr}.Life / {expr}.LifeMax")
+		));
+		RefactorInstanceMember("Terraria.DataStructures.BossBarDrawParams", "ShieldPercentToShow", ReplaceContainingMemberAccess(expr =>
+			Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseExpression($"{expr}.Shield / {expr}.ShieldMax")
+		));
 
 		// TODO, assignment rewriter
 		// RefactorInstanceMember("Terraria.ModLoader.ModBlockType", "HitSound", Comment("Suggestion: Use a SoundStyle here"));
