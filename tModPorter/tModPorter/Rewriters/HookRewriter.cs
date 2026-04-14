@@ -92,6 +92,7 @@ public class HookRewriter : BaseRewriter
 		RegisterNpcDrawScreenPosBodyRewrites(sym, node);
 		RegisterSetNpcNameListBodyRewrites(sym, node);
 		RegisterCanHitNpcBodyRewrites(sym, node);
+		RegisterModPylonGetNpcShopEntryBodyRewrites(sym, node);
 		RegisterRemovedHookBodyRewrites(sym, node);
 		RegisterRemovedHookStaticDefaultsMigrations(sym, node);
 		node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
@@ -781,6 +782,47 @@ public class HookRewriter : BaseRewriter
 			RegisterAction<ArrowExpressionClauseSyntax>(node.ExpressionBody, n =>
 				n.WithExpression(LiteralExpression(SyntaxKind.TrueLiteralExpression).WithTriviaFrom(n.Expression)));
 		}
+	}
+
+	private void RegisterModPylonGetNpcShopEntryBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
+	{
+		bool isModPylon = sym?.ContainingType.InheritsFrom("Terraria.ModLoader.ModPylon") == true;
+		bool isTargetMethod = sym?.Name == "GetNPCShopEntry" || node.Identifier.Text == "GetNPCShopEntry";
+		if (!isModPylon || !isTargetMethod)
+			return;
+
+		if (!ReturnsDefaultPylonShopEntry(node))
+			return;
+
+		RegisterAction<MethodDeclarationSyntax>(node, CreateDefaultPylonShopEntryMethod);
+	}
+
+	private static bool ReturnsDefaultPylonShopEntry(MethodDeclarationSyntax node)
+	{
+		ExpressionSyntax expression = node.ExpressionBody?.Expression;
+		if (expression == null && node.Body?.Statements is [ReturnStatementSyntax { Expression: { } returnExpression }])
+			expression = returnExpression;
+
+		if (expression is not ConditionalExpressionSyntax conditional)
+			return false;
+
+		if (conditional.Condition is not IdentifierNameSyntax { Identifier.Text: "isNPCHappyEnough" })
+			return false;
+
+		if (conditional.WhenTrue is not IdentifierNameSyntax { Identifier.Text: "ItemDrop" })
+			return false;
+
+		return conditional.WhenFalse.IsKind(SyntaxKind.NullLiteralExpression);
+	}
+
+	private static MethodDeclarationSyntax CreateDefaultPylonShopEntryMethod(MethodDeclarationSyntax node)
+	{
+		var trailingTrivia = node.Body?.CloseBraceToken.TrailingTrivia ?? node.SemicolonToken.TrailingTrivia;
+		var body = Block(
+			(ReturnStatementSyntax)ParseStatement("return base.GetNPCShopEntry();")
+		).WithCloseBraceToken(Token(TriviaList(), SyntaxKind.CloseBraceToken, trailingTrivia));
+
+		return node.WithBody(body).WithExpressionBody(null).WithSemicolonToken(default);
 	}
 
 	private void RegisterRemovedHookBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
