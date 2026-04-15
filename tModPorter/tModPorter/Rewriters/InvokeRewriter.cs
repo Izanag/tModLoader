@@ -154,6 +154,21 @@ public partial class InvokeRewriter : BaseRewriter
 		return MemberAccessExpression(invoke.WithoutTrivia(), "Type").WithTriviaFrom(invoke);
 	};
 
+	public static RewriteInvoke ToGoreTypeCall => (rw, invoke, methodName) => {
+		if (methodName is not GenericNameSyntax genericName || genericName.TypeArgumentList.Arguments.Count != 1 || invoke.ArgumentList.Arguments.Count != 0)
+			return invoke;
+
+		var replacement = InvocationExpression(
+			SyntaxFactory.MemberAccessExpression(
+				SyntaxKind.SimpleMemberAccessExpression,
+				rw.UseType("Terraria.ModLoader.ModContent"),
+				GenericName(Identifier("GoreType"), TypeArgumentList(SingletonSeparatedList(genericName.TypeArgumentList.Arguments[0].WithoutTrivia())))
+			)
+		);
+
+		return replacement.WithTriviaFrom(invoke);
+	};
+
 	public static RewriteInvoke ToStaticMethodCall(string onType, string newName, bool targetBecomesFirstArg = false) => (rw, invoke, _) => {
 		var targetExpr = invoke.Expression switch {
 			MemberAccessExpressionSyntax memberAccess => memberAccess.Expression,

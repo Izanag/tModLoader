@@ -26,3 +26,7 @@ public abstract class FindTypeTest : Mod
 
 	int? ViaConditionalAccess(Mod mod) => mod?.BuffType("BuffClass");
 }
+
+public class GoreClass : ModGore
+{
+}

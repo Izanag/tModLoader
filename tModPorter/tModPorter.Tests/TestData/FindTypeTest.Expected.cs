@@ -20,8 +20,6 @@ public abstract class FindTypeTest : Mod
 #if COMPILE_ERROR
 		int m = mod.GetGoreSlot("DoesNotStartWith'Gores/'String")/* tModPorter Note: Removed. Replacement is Mod.Find<ModGore>("NameWithout'Gores/'").Type */;
 		int n = ModGore.GetGoreSlot("DoesNotStartWith'ModName/Gores/'String")/* tModPorter Note: Removed. Replacement is ModContent.Find<ModGore>("ModName/NameWithout'Gores/'").Type */;
-
-		int o = ModContent.GoreType<GoreClass>();
 #endif
 		// instead-expect
 #if COMPILE_ERROR
@@ -29,12 +27,16 @@ public abstract class FindTypeTest : Mod
 		int l = ModGore.GetGoreSlot("ModName/Gores/GoreTextureOrClass");
 		int m = mod.GetGoreSlot("DoesNotStartWith'Gores/'String");
 		int n = ModGore.GetGoreSlot("DoesNotStartWith'ModName/Gores/'String");
-
-		int o = mod.GetGoreSlot<GoreClass>();
 #endif
+
+		int o = ModContent.GoreType<GoreClass>();
 	}
 
 	int ViaIdentifier() => Find<ModBuff>("BuffClass").Type;
 
 	int? ViaConditionalAccess(Mod mod) => mod?.Find<ModBuff>("BuffClass").Type;
+}
+
+public class GoreClass : ModGore
+{
 }
