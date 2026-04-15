@@ -154,20 +154,77 @@ public partial class InvokeRewriter : BaseRewriter
 		return MemberAccessExpression(invoke.WithoutTrivia(), "Type").WithTriviaFrom(invoke);
 	};
 
-	public static RewriteInvoke ToGoreTypeCall => (rw, invoke, methodName) => {
-		if (methodName is not GenericNameSyntax genericName || genericName.TypeArgumentList.Arguments.Count != 1 || invoke.ArgumentList.Arguments.Count != 0)
+	public static RewriteInvoke ToGoreTypeCall(bool isStatic) => (rw, invoke, methodName) => {
+		if (methodName is GenericNameSyntax genericName && genericName.TypeArgumentList.Arguments.Count == 1 && invoke.ArgumentList.Arguments.Count == 0) {
+			var goreTypeCall = InvocationExpression(
+				SyntaxFactory.MemberAccessExpression(
+					SyntaxKind.SimpleMemberAccessExpression,
+					rw.UseType("Terraria.ModLoader.ModContent"),
+					GenericName(Identifier("GoreType"), TypeArgumentList(SingletonSeparatedList(genericName.TypeArgumentList.Arguments[0].WithoutTrivia())))
+				)
+			);
+
+			return goreTypeCall.WithTriviaFrom(invoke);
+		}
+
+		if (methodName is not IdentifierNameSyntax || invoke.ArgumentList.Arguments.Count != 1 || invoke.ArgumentList.Arguments[0].Expression is not LiteralExpressionSyntax { RawKind: (int)SyntaxKind.StringLiteralExpression } stringLiteral)
 			return invoke;
 
-		var replacement = InvocationExpression(
+		if (!TryGetGorePath(stringLiteral.Token.ValueText, isStatic, out var gorePath)) {
+			var note = isStatic
+				? "Note: Removed. Replacement is ModContent.Find<ModGore>(\"ModName/NameWithout'Gores/'\").Type"
+				: "Note: Removed. Replacement is Mod.Find<ModGore>(\"NameWithout'Gores/'\").Type";
+			return invoke.WithBlockComment(note);
+		}
+
+		var gorePathLiteral = LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(gorePath))
+			.WithTriviaFrom(stringLiteral);
+		var gorePathArgument = invoke.ArgumentList.Arguments[0].WithExpression(gorePathLiteral);
+
+		if (!isStatic) {
+			invoke = invoke.ReplaceNode((IdentifierNameSyntax)methodName, GenericName("Find", rw.UseType("Terraria.ModLoader.ModGore")));
+			invoke = invoke.WithArgumentList(ArgumentList(SingletonSeparatedList(gorePathArgument)).WithTriviaFrom(invoke.ArgumentList));
+			return MemberAccessExpression(invoke.WithoutTrivia(), "Type").WithTriviaFrom(invoke);
+		}
+
+		var staticFindCall = InvocationExpression(
 			SyntaxFactory.MemberAccessExpression(
 				SyntaxKind.SimpleMemberAccessExpression,
 				rw.UseType("Terraria.ModLoader.ModContent"),
-				GenericName(Identifier("GoreType"), TypeArgumentList(SingletonSeparatedList(genericName.TypeArgumentList.Arguments[0].WithoutTrivia())))
-			)
+				GenericName("Find", rw.UseType("Terraria.ModLoader.ModGore"))
+			),
+			ArgumentList(SingletonSeparatedList(gorePathArgument)).WithTriviaFrom(invoke.ArgumentList)
 		);
 
-		return replacement.WithTriviaFrom(invoke);
+		return MemberAccessExpression(staticFindCall.WithoutTrivia(), "Type").WithTriviaFrom(invoke);
 	};
+
+	private static bool TryGetGorePath(string originalPath, bool isStatic, out string gorePath) {
+		const string localPrefix = "Gores/";
+		const string staticPrefix = "/Gores/";
+
+		if (!isStatic) {
+			if (originalPath.StartsWith(localPrefix, StringComparison.Ordinal)) {
+				gorePath = originalPath[localPrefix.Length..];
+				return true;
+			}
+
+			gorePath = null;
+			return false;
+		}
+
+		var gorePrefixIndex = originalPath.IndexOf(staticPrefix, StringComparison.Ordinal);
+		if (gorePrefixIndex > 0 && IsSimpleIdentifierLikePathSegment(originalPath[..gorePrefixIndex])) {
+			gorePath = originalPath[..gorePrefixIndex] + "/" + originalPath[(gorePrefixIndex + staticPrefix.Length)..];
+			return true;
+		}
+
+		gorePath = null;
+		return false;
+	}
+
+	private static bool IsSimpleIdentifierLikePathSegment(string pathSegment) =>
+		pathSegment.Length > 0 && pathSegment.All(ch => char.IsLetterOrDigit(ch) || ch == '_');
 
 	public static RewriteInvoke ToStaticMethodCall(string onType, string newName, bool targetBecomesFirstArg = false) => (rw, invoke, _) => {
 		var targetExpr = invoke.Expression switch {

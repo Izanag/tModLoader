@@ -412,8 +412,8 @@ public static partial class Config
 		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "TileType",		ToFindTypeCall("Terraria.ModLoader.ModTile"));
 		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "WallType",		ToFindTypeCall("Terraria.ModLoader.ModWall"));
 
-		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "GetGoreSlot", ToGoreTypeCall);
-		RefactorStaticMethodCall("Terraria.ModLoader.ModGore", "GetGoreSlot", ToGoreTypeCall);
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "GetGoreSlot", ToGoreTypeCall(isStatic: false));
+		RefactorStaticMethodCall("Terraria.ModLoader.ModGore", "GetGoreSlot", ToGoreTypeCall(isStatic: true));
 
 		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "RegisterHotKey",		ToStaticMethodCall("Terraria.ModLoader.KeybindLoader",				"RegisterKeybind",		targetBecomesFirstArg: true));
 		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "AddBackgroundTexture",ToStaticMethodCall("Terraria.ModLoader.BackgroundTextureLoader",	"AddBackgroundTexture",	targetBecomesFirstArg: true));
