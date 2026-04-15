@@ -568,13 +568,17 @@ public class HookRewriter : BaseRewriter
 
 	private void RegisterSaveDataBodyRewrites(IMethodSymbol sym, MethodDeclarationSyntax node)
 	{
-		if (sym.Name != "SaveData")
+		if (sym.Name is not "SaveData" and not "SaveWorldData")
 			return;
 
-		if (!(sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
+		bool saveDataType =
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModItem") ||
 			sym.ContainingType.InheritsFrom("Terraria.ModLoader.GlobalItem") ||
 			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModPlayer") ||
-			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModTileEntity")))
+			sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModTileEntity");
+		bool saveWorldDataType = sym.ContainingType.InheritsFrom("Terraria.ModLoader.ModSystem");
+
+		if (!(saveDataType || saveWorldDataType))
 			return;
 
 		if (node.Body?.Statements is [ReturnStatementSyntax { Expression: { } expression }] &&

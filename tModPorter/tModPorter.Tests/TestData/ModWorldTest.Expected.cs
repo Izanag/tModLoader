@@ -6,9 +6,7 @@ public class ModWorldTest : ModSystem
 {
 	public override void LoadWorldData(TagCompound tag) { /* Empty */ }
 
-#if COMPILE_ERROR
-	public override void SaveWorldData(TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */ => new TagCompound();
-#endif
+	public override void SaveWorldData(TagCompound tag)/* tModPorter Suggestion: Edit tag parameter instead of returning new TagCompound */ {}
 
 	public override void OnWorldLoad()/* tModPorter Suggestion: Also override OnWorldUnload, and mirror your worldgen-sensitive data initialization in PreWorldGen */ { /* Empty */ }
 
